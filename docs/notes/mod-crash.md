@@ -15,9 +15,14 @@
 - [ ] Check Lua scripts to see what is related to mods
   - Look for `Modding`
 - [x] Disabled ASLR
-- [ ] Examine parent function of CvModdingFrameworkAppSide::SetActiveDLCandMods
-  - [ ] Examine how mods are handled differently
-  - [ ] See what's called after CvModdingFrameworkAppSide::SetActiveDLCandMods
+- [ ] Examine how CvModdingFrameworkAppSide::SetActiveDLCandMods is called
+  - [x] Document different call flows
+  - [ ] Document CvModdingFrameworkAppSide::SetActiveDLCandMods parameters used in different call flows
+  - [ ] See what's called after CvModdingFrameworkAppSide::SetActiveDLCandMods related to changing CvGameCoreDLL address in Lua interpreter
+    - Nothing in SetupDLL or parent, not sure about lActivateAllowedDLC,
+- [x] Try calling cvLuaModdingLibrary::lDeactivateMods before cvLuaModdingLibrary::lActivateEnabledMods?
+- [ ] Try calling cvLuaModdingLibrary::lActivateAllowedDLC after cvLuaModdingLibrary::lActivateEnabledMods?
+  - Why not, it gets called at startup and **twice** after changing DLC
 
 ## Current theory: Shared library location
 
@@ -34,6 +39,8 @@
   - CvModdingFrameworkAppSide::SetActiveDLCandMods is run multiple times when mods aren't used. Maybe a necessary step is skipped?
 - Something done after CvModdingFrameworkAppSide::SetActiveDLCandMods
   - Maybe the bug happens after CvModdingFrameworkAppSide::SetActiveDLCandMods, e.g. a necessary step is skipped when using mods, or alternatively
+
+LuaSystem::LuaStdLibLibrary::RefreshIncludeFileList is called after LoadCvGameCoreDLL. My guess is this is what updates the references in the Lua interpreter
 
 #### Cause
 
@@ -113,12 +120,82 @@ But CvModdingFrameworkAppSide::SetActiveDLCandMods is already calling LuaSystem:
 
 ## Workflow
 
+#### Comparing different workflows
+
+When game is first loaded
+
+1. CivBEApp::SetupDLL
+   1. cvContentPackageIDList::cvContentPackageIDList
+   1. CvModdingFrameworkAppSide::GetAvailableDLC
+   1. CvModdingFrameworkAppSide::SetActiveDLCandMods
+      - ,,,0,1
+
+```
+#0  0x08a5f4c2 in CvModdingFrameworkAppSide::SetActiveDLCandMods(cvContentPackageIDList const&, std::__1::list<ModAssociations::ModInfo, std::__1::allocator<ModAssociations::ModInfo> > const&, bool, bool) ()
+#1  0x089f9436 in CivBEApp::SetupDLL() ()
+#2  0x089f6d4b in CivBEApp::AsynchInit(unsigned int) ()
+#3  0x089f6910 in CivBEApp::Tick(AppHost::TickInfo const*) ()
+#4  0x0903b6e8 in AppHost::RunApp(int, char**, AppHost::Application*) ()
+#5  0x0903a8d0 in AppHost::RunApp(char*, AppHost::Application*) ()
+#6  0x089f0ff8 in WinMain ()
+```
+
+When clicking Continue after the game first loads
+
+1. cvLuaModdingLibrary::lActivateAllowedDLC
+   1. cvContentPackageIDList::cvContentPackageIDList
+   1. GameCore::GetPreGame
+   1. CvModdingFrameworkAppSide::SetActiveDLCandMods
+   - ,,,0, 0
+
+Deactivate or activate any number of DLC in main menu, also when returning from Mods menu to main menu
+
+1. cvLuaContentManager::lSetActive
+   1. CvModdingFrameworkAppSide::DeactivateMods
+      1. cvContentPackageIDList::cvContentPackageIDList
+      1. cvContentPackageManager::GetAllPackageIDs
+      1. cvContentPackageIDList::Remove
+      1. SetActiveDLCandMods
+         - ,,,0, 0
+1. cvLuaModdingLibrary::lActivateAllowedDLC > CvModdingFrameworkAppSide::SetActiveDLCandMods
+   - ,,,0, 0
+1. cvLuaModdingLibrary::lActivateAllowedDLC > CvModdingFrameworkAppSide::SetActiveDLCandMods
+   - ,,,0, 0
+
+```
+#0  0x08a5f4c2 in CvModdingFrameworkAppSide::SetActiveDLCandMods(cvContentPackageIDList const&, std::__1::list<ModAssociations::ModInfo, std::__1::allocator<ModAssociations::ModInfo> > const&, bool, bool) ()
+#1  0x08a6188f in CvModdingFrameworkAppSide::DeactivateMods() ()
+#2  0x08c30b85 in cvLuaContentManager::lSetActive(lua_State*) ()
+```
+
+Loading a mod through the Mods menu
+
+1. cvLuaModdingLibrary::lActivateEnabledMods > CvModdingFrameworkAppSide::ActivateModsAndDLCForEnabledMods
+   1. cvContentPackageIDList::cvContentPackageIDList
+   1. GetActiveDLCForMods
+   1. SetActiveDLCandMods
+      - ,,,0, 0
+
+#### `CvModdingFrameworkAppSide::SetActiveDLCandMods`
+
+Parameters
+
+1. (CvModdingFrameworkAppSide)
+2. (cvContentPackageIDList)
+   - List of mod/DLC GUIDs???
+3. (list \*)???
+   - List of "mod associations"?
+4. (boolean) - If true, seems to skip some kind of requirement that a package at some location in parameter 1 must also be in the list in parameter 2. Always set to false in the game code.
+5. (boolean) - Seems to indicate whether this is the initial load. Otherwise, everything needs to be unloaded first.
+
 #### Activating/Deactivating DLC through the main menu
 
 This calls the same functions as when mods are loaded, but works
 
 - CvModdingFrameworkAppSide::SetActiveDLCandMods > CvModdingFrameworkAppSide::LoadCvGameCoreDLL > GameCore::LoadDLL
 - CvModdingFrameworkAppSide::SetActiveDLCandMods is called multiple times
+
+- Called from CvModdingFrameworkAppSide::DeactivateMods when DLC is unchecked
 
 #### When loading a mod
 

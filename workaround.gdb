@@ -6,10 +6,16 @@ commands
   commands
     # Return early without running the rest of the function
     return (int)0
-    # Detach gdb to avoid a performance hit when playing the game
-    detach
+    continue
   end
   continue
+end
+
+# When a game is started
+break CvInitMgr::InitGame
+commands
+  # Detach gdb to avoid a performance hit when playing the game
+  detach
 end
 
 run

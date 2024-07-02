@@ -33,17 +33,20 @@ The fix copies the library from the Steam Linux Runtime to the game directory so
    gdb --batch --command=workaround.gdb --args ./CivBE # %command%
    ```
 
-1. Under the _DLC_ menu, load or unload any DLC needed by the mod you wish to use
+1. Start the game from Steam
 
-   ⓘ This process is normally automatic, but this is what causes the crash, so it needs to be done manually with this workaround
+1. If you wish to play with a mod:
 
-1. Open the _Mods_ menu and play with any mods as desired
+   1. Under the _DLC_ menu, load or unload any DLC needed by the mod you wish to use
+
+      ⓘ This process is normally automatic, but this is what causes the crash, so it needs to be done manually with this workaround
+
+   1. Open the _Mods_ menu and play with any mods as desired
 
 👉 Caveats:
 
-- TODO: currently the workaround will cause a negative performance impact to the game if it's played without mods. This should be easy to fix.
-- Because this uses gdb to avoid the bug, the initial load of the game will be slower. Once mods are loaded, gdb will detach and performance will return to normal.
-- Because gdb detaches after the initial mod load, the workaround will only work once when mods are loaded. To play a new game with mods, you will need to completely exit the game and start it again from Steam.
+- Because this uses gdb to avoid the bug, the initial load of Beyond Earth will be slower. Once a game is started, gdb will detach and performance will return to normal.
+- Because gdb detaches after the initial mod load, the workaround will only work once when mods are loaded. To play a new game with mods, you will need to completely exit Beyond Earth and start it again from Steam.
 
 #### Explanation
 

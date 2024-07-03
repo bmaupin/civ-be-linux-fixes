@@ -1,4 +1,6 @@
-Troubleshooting various crashes with Sid Meier's Civilization: Beyond Earth on Linux.
+Fixes and workarounds for various crashes with Sid Meier's Civilization: Beyond Earth on Linux
+
+💡 [See my other Civ projects here](https://github.com/search?q=user%3Abmaupin+topic%3Acivilization&type=Repositories)
 
 ## Game crashes within 10 turns
 
@@ -18,9 +20,7 @@ The fix copies the library from the Steam Linux Runtime to the game directory so
 
 ## Game crashes before it starts when using mods
 
-⚠️ Work in progress: [docs/notes/mod-crash.md](docs/notes/mod-crash.md)
-
-ⓘ Mod support seems to have been added in December 2014 but very quickly afterwards users were reporting that starting any game with mods would make the game crash.
+The game will crash just before starting if any mods are used
 
 #### Workaround
 
@@ -59,3 +59,13 @@ When a CvGameCoreDLL is loaded, the Lua interpreter seems to have some sort of r
 This all seems to work fine except in one situation: when CvGameCoreDLL is loaded because of mods, the memory address changes but it doesn't seem to be properly updated in the Lua interpreter. So as soon as a game starts and tries to call a Lua function in CvGameCoreDLL, it crashes.
 
 The workaround above works around this by skipping only the unload/load of CvGameCoreDLL that happens when mods are used.
+
+#### Other approaches
+
+A shared library wrapper would be nice but won't work in this case because the functions that need to be overridden are in the base game binary and not in a shared library.
+
+Another idea I had was to create a shared library with the function override, then add it to the binary using [statifier](https://sourceforge.net/projects/statifier/), then update the binary and modify all calls to the overridden function to instead call the function in the shared library. However, statifier is all-or-nothing; it will attempt to make all shared libraries used by the binary static, which isn't a viable option since the CvGameCoreDLL libraries need to remain shared librairies. Not to mention it's overkill.
+
+Binary instrumentation such as [Dyninst](https://github.com/dyninst/dyninst/) might work but I'm not sure how feasible it would be to create a patch since the binary seems to differ each time Steam installs it (maybe some kind of security mechanism). And even then, there would likely be a significant performance hit.
+
+The last approach considered would be a patch to the binary. This may still be possible but would take a significant amount of time to create.

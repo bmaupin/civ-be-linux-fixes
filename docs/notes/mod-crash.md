@@ -400,39 +400,3 @@ Thread 10 "CivBE" hit Breakpoint 2, 0x093199eb in LuaSystem::FLua_LoadFile(lua_S
 Thread 10 "CivBE" hit Breakpoint 2, 0x093199eb in LuaSystem::FLua_LoadFile(lua_State*, wchar_t const*) ()
 (gdb)
 "Assets\gameplay\lua\stationquestmanager.lua"
-
-## `CvModdingFrameworkAppSide::SetActiveDLCandMods`
-
-#### Parameters
-
-1. (CvModdingFrameworkAppSide)
-   - `$sp+0x4`
-   - Offset 0x5d4: contains a package ID list???
-   - Offset 0x5e8
-     - Integer; number of active DLC/mods???
-2. (cvContentPackageIDList)
-   - List of mod/DLC GUIDs???
-   - $sp+0x8
-3. (list \*)???
-   - List of "mod associations"?
-   - $sp+0xc
-   - `x/20xw *(int)($sp+0xc)`
-   - Offset 0x4:
-   - Offset 0x8: length of list ???
-4. (boolean) - If true, seems to skip some kind of requirement that a package at some location in parameter 1 must also be in the list in parameter 2. Always set to false in the game code.
-5. (boolean) - Seems to indicate whether this is the initial load. Otherwise, everything needs to be unloaded first.
-
-```
-struct cvContentPackageIDList {
-    void *unknown;             // Some data (likely 4 bytes, based on the offset to the next element)
-    cvContentPackageIDList *next; // Pointer to the next element in the linked list
-    _GUID guid;                // GUID, starting at offset 8 bytes from the start
-};
-```
-
-#### SetupDLL
-
-#### lActivateAllowedDLC
-
-- GUID of Expansion 1 is at x/4xw \*(int)($sp+0xc)+0x10
-  - In param 3 ???

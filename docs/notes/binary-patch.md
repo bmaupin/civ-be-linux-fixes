@@ -10,6 +10,13 @@ Figure out if there's some way inside SetActiveDLCandMods to know which CvGameCo
 
 I'm not sure this would work in situations where a mod needed a different CvGameCoreDLL other than the one that's already loaded ...
 
+#### Implementation ideas
+
+- Need to know
+  - If any CvGameCoreDLL is active, and which
+  - Which CvGameCoreDLL will be activated
+    - The second parameter to SetActiveDLCandMods does contain the list of DLC, and the CvGameCoreDLL can be
+
 ## Idea 2: Skip LoadCvGameCoreDLL if mods are used
 
 Similarly to what we're doing now, see if there's some way inside SetActiveDLCandMods to see if mods are being used, and if so, skip LoadCvGameCoreDLL.
@@ -23,9 +30,22 @@ SetActiveDLCandMods seems to have a couple parameters with list of mods and DLC.
 #### Implementation ideas
 
 - SetActiveDLCandMods
+
+  - If enabled mods list (parameter 3) is empty, skip LoadCvGameCoreDLL
+
+    - Its length is stored in the 3rd byte of the object:
+
+      1. Get the address of the list at $sp+0xc, then add 8 to that, e.g.
+
+         ```
+         print *(int)((*(void**)($sp+0xc))+0x8)
+         ```
+
+    - !! This is stored in a variable near the top of the function!!
+
   - Use CvModdingFrameworkAppSide::GetActivatedMods to see if mods are activated and skip LoadCvGameCoreDLL?
     - return (char \*)this + 1504;
-  - If enabled mods list (parameter 3) is empty, skip LoadCvGameCoreDLL
+
 - GetActiveDLCForMods
   - Modify it?
     - We'd need to first see what's being passed to SetActiveDLCandMods to see what we would need
@@ -52,13 +72,15 @@ But I'm not even sure there is enough space to implement these ideas in that spa
 
 ## Notes
 
-#### `CvModdingFrameworkAppSide::SetActiveDLCandMods` parameters
+### `CvModdingFrameworkAppSide::SetActiveDLCandMods`
+
+#### Parameters
 
 1. (CvModdingFrameworkAppSide)
    - `$sp+0x4`
    - Offset 0x5d4: contains a package ID list???
    - Offset 0x5e8
-     - Integer; number of active DLC/mods???
+     - Integer; number of enabled mods??
 2. (cvContentPackageIDList)
    - List of mod/DLC GUIDs???
    - $sp+0x8
@@ -112,6 +134,18 @@ struct cvContentPackageIDList {
 - != cvContentPackageIDList
 - = cvContentPackageIDList
 
+### Mod list
+
+#### Structure
+
+- Object
+  - First byte: address of first item in list, otherwise address of list if empty
+  - Second byte: address of last item in list, otherwise address of list if empty
+  - Third byte: number of items in list
+- Item
+  - First byte: address of previous item in list, otherwise address of list if no previous item
+  - Second byte: address of next item in list, otherwise address of list if no next item
+
 ## Notes
 
 #### Get parameter content
@@ -127,18 +161,47 @@ Print DLC:
 ```
 define print_guids
   set $list_head = *(void**)($esp+0x8)
-  set $node = *(void**)$list_heset $node = *(void**)$list_headad
-  while $node != $list_hwhile $node != $list_headead
+  set $node = *(void**)$list_head
+  while $node != $list_head
     printf "GUID: "
-    x/4wx $node+8x/4wx $node+8
+    x/4wx $node+8
     set $node = *(void**)$node
   end
 end
 ```
 
-#### Content
+Print Mods:
 
-1. CivBEApp::SetupDLL
-   - DLC
-     - Expansion 1
-     - Maps
+```
+x/20xw *(void**)($sp+0xc)
+```
+
+#### Content of DLC/mods in SetActiveDLCandMods
+
+- First starting the game
+  1. CivBEApp::SetupDLL
+  - DLC
+    - Expansion 1
+    - Maps
+  - Mods: none?
+  1. cvLuaModdingLibrary::lActivateAllowedDLC
+  - DLC
+    - Expansion 1
+    - Maps
+  - Mods: none?
+- Deactivate/activate DLC from DLC menu
+  1. CvModdingFrameworkAppSide::DeactivateMods
+     - DLC: list of activated DLC
+     - Mods: none
+  1. cvLuaModdingLibrary::lActivateAllowedDLC
+     - DLC: list of activated DLC
+     - Mods: none
+  1. cvLuaModdingLibrary::lActivateAllowedDLC
+     - DLC: list of activated DLC
+     - Mods: none
+- Activating mods from Mods menu
+  1. cvLuaModdingLibrary::lActivateEnabledMods > CvModdingFrameworkAppSide::ActivateModsAndDLCForEnabledMods
+     - DLC: list of activated DLC, e.g.
+       - Expansion 1
+       - Maps
+     - Mods: list of activated mods

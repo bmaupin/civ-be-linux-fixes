@@ -33,6 +33,8 @@ The game will crash just before starting if any mods are used
    xxd -c1 -r CivBE.patch ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/CivBE
    ```
 
+👉 The patch will also enable acheivements when playing with mods. If you don't want this behaviour, change `32` in the last line of the patch to `31` and re-apply it. See [https://github.com/bmaupin/civ5-cheevos-with-mods](https://github.com/bmaupin/civ5-cheevos-with-mods) for more information.
+
 #### Uninstall patch
 
 1. Open Steam and go to _Library_

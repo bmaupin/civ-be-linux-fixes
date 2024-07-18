@@ -21,3 +21,22 @@ The fix copies the library from the Steam Linux Runtime to the game directory so
 ## Game crashes before it starts when using mods
 
 The game will crash just before starting if any mods are used
+
+#### Install patch
+
+⚠️ This is a work in progress and testing is ongoing
+
+1. Download [CivBE.patch](CivBE.patch)
+1. Apply the patch
+
+   ```
+   xxd -c1 -r CivBE.patch ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/CivBE
+   ```
+
+#### Uninstall patch
+
+1. Open Steam and go to _Library_
+
+1. Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
+
+1. _Installed Files_ > _Verify integrity of game files_

@@ -300,14 +300,14 @@ if (cvContentPackageIDList::operator==(activated_dlc,dlc_to_activate)) {
         // skip LoadCvGameCoreDLL
 ```
 
-- [ ] Game with DLC, without mods
-- [ ] Game without DLC, game without mods
-- [ ] Game with DLC, with mods
-- [ ] Game without DLC, with mod that doesn't require DLC
-- [ ] Game without DLC, with mod that requires DLC
-- [ ] Game with DLC, with mod that requires base game
-- [ ] Saved game, without mods
-- [ ] Saved game, with mods
+- [x] Game with DLC, without mods
+- [x] Game without DLC, game without mods
+- [x] Game with DLC, with mods
+- [x] Game without DLC, with mod that doesn't require DLC
+- [x] Game without DLC, with mod that requires DLC
+- [x] Game with DLC, with mod that requires base game
+- [x] Saved game, without mods
+- [x] Saved game, with mods
 
 #### Solution 3
 
@@ -327,3 +327,132 @@ if (num_mods_to_activate != 0) {
 - [ ] Game with DLC, with mod that requires base game
 - [ ] Saved game, without mods
 - [ ] Saved game, with mods
+
+#### Implementation
+
+- put value at $esp+0x844 at $esp+0x4
+- read address at $sp+0x840 and put in $eax
+- put value of $eax+0x5d4 in $esp
+
+1. Start at 0xa17f00 and insert these instructions
+
+```
+# Put the address of list of DLC to activate in $esp+0x4 (the second parameter)
+08a5ff00 8B 84 24 44 08 00 00   mov eax, [esp+0x844]  ;
+08a5ff07 89 44 24 04            mov [esp+0x4], eax    ;
+# Put the address of list of activated DLC in $esp (first parameter)
+08a5ff0b 8b 44 24 70            MOV        should_reload_unit_system_2,dword ptr [ESP + l
+08a5ff0f 89 04 24               MOV        dword ptr [ESP]=>local_844,should_reload_unit_
+# Call cvContentPackageIDList::operator!=
+##############################08a5ff12 e8 47 97 12 00         CALL 0x08b8965e
+08a5ff12 e8 9f 97 12 00         CALL 0x08b896b6 ; Call cvContentPackageIDList::operator!=
+08a5ff17 84 c0                  TEST AL, AL ; Test the result in AL (set by the CALL instruction)
+08a5ff19 74 17                  JZ 0x08a5ff30 ; If zero (i.e., equal), jump past the call to CvModdingFrameworkAppSide::LoadCvGameCoreDLL
+```
+
+Ignore for now:
+
+```
+08a5ff00 8d 87 d4 05 00 00 LEA EAX, [EDI + 0x5d4] ; Load address of the first parameter into EAX
+TODO 89 6c 24 04 MOV dword ptr [ESP + local_838], EBP ; Save EBP value (second parameter) on the stack
+TODO 89 04 24 MOV dword ptr [ESP], EAX ; Move the first parameter into the correct position on the stack
+TODO e8 TO DO TO DO CALL 0x08b8965e
+
+TODO 74 12 JZ 0x08a5ff30
+TODO 90 90 90
+```
+
+1. Fill remaining addresses up to 0xa17f21 with 0x90
+1. Fill 0xa17f30 - 0xa17f38 with 0x90
+
+- NOOP 0xa17f00 - 0xa17f21 (33)
+- NOOP 0xa17f30 - 0xa17f38 (8)
+
+should be 08b896b6???
+
+#### Troubleshooting
+
+```
+break SetActiveDLCandMods
+# first use of operator!=
+#break *0x08a5f529
+# Start of my code
+break *0x08a5ff00
+# Call to LoadCvGameCoreDLL
+break *0x08a5ff2b
+run
+```
+
+At top of function (0x08a5f4c2):
+
+```
+# Activated DLC
+x/20xw *(void**)($sp+0x4)+0x5d4
+# DLC to activate
+x/20xw *(void**)($sp+0x8)
+```
+
+At start of our custom code (0x08a5ff00):
+
+```
+# Activated DLC, 1st parameter
+x/20xw *(void**)($sp+0x840)+0x5d4
+# DLC to activate
+x/20xw *(void**)($sp+0x844)
+```
+
+- mods:
+  - 0xe48fe758
+  - 0xe48fa1d0
+
+```
+stepi
+```
+
+When we get to JE/JZ:
+
+```
+info registers eflags
+```
+
+`ZF` means activated DLC and DLC to activate match (!= function returned false, 0, so zero flag is set)
+
+1. SetActiveDLCandMods
+   - dlc_to_activate at $sp+0x8: 0xe48fc1e0
+     - x/20xw \*(void\*\*)($sp+0x8)
+   - activated_dlc at
+     - \*(void\*\*)($sp+0x4)+0x5d4
+     - 0xe48fe184+0x5d4: 0xE48FE758
+1. First use of operator!=
+   - dlc_to_activate (0xe48fc1e0)
+     - at $sp+0x844
+       - x/20xw \*(void\*\*)($sp+0x844)
+     - at $sp+0x4 (put there by previous instruction)
+     - at $ebp (put there at the beginning of the function)
+     - not at $sp+0x8
+   - activated_dlc (0xe48fe758)
+     - at $sp+0x840+0x5d4
+       - x/20xw \*(void\*\*)($sp+0x840)+0x5d4
+     - at $sp (put there by previous instruction)
+     - at $eax (put there by previous instruction)
+     - at 0xe48fe184+0x5d4
+     - at $sp+0x70 ??
+1. Start of my code
+   - $ebp: 0xe48fbba0
+   - this (0xe48fe184)
+     - at
+       - $sp+0x82c
+       - $sp+0x840
+       - $ebp+0x5fc
+       - $ebp+0x610
+   - dlc_to_activate (0xe48fc1e0)
+     - not in registers
+     - at
+       - $sp+0x79c
+       - $sp+0x820
+       - $sp+0x830
+       - $sp+0x844
+   - activated_dlc (0xe48fe758)
+     - not in registers
+     - at 0xe48fe184+0x5d4
+     - at $sp+0x70 (put there before operator!=)

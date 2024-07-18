@@ -17,6 +17,8 @@ I'm not sure this would work in situations where a mod needed a different CvGame
   - Which CvGameCoreDLL will be activated
     - The second parameter to SetActiveDLCandMods does contain the list of DLC, and the CvGameCoreDLL can be
 
+set $enabled_dlc = *(void**)($sp+0x8)
+
 ## Idea 2: Skip LoadCvGameCoreDLL if mods are used
 
 Similarly to what we're doing now, see if there's some way inside SetActiveDLCandMods to see if mods are being used, and if so, skip LoadCvGameCoreDLL.
@@ -77,12 +79,25 @@ But I'm not even sure there is enough space to implement these ideas in that spa
 #### Parameters
 
 1. (CvModdingFrameworkAppSide)
-   - `$sp+0x4`
-   - Offset 0x5d4: contains a package ID list???
-   - Offset 0x5e8
-     - Integer; number of enabled mods??
+
+   - Address `$sp+0x4`
+   - 0x5c8 (cvContentPackageIDList)
+   - 0x5d4 (cvContentPackageIDList)
+
+     - Contains a package ID list, different from the one sent in parameters
+     - Maybe this is the list of already enabled DLC??
+     - To print:
+
+       ```
+       print_guids *(void**)($sp+0x4)+0x5d4
+       ```
+
+   - 0x5e0 (list?)
+     - List of mods, different from the one sent in parameters
+     - Maybe this is the list of already enabled mods??
+
 2. (cvContentPackageIDList)
-   - List of mod/DLC GUIDs???
+   - List of enabled DLC GUIDs
    - $sp+0x8
 3. (list \*)???
    - List of enabled mods (GUID as string and version as integer)
@@ -159,8 +174,8 @@ run
 Print DLC:
 
 ```
-define print_guids
-  set $list_head = *(void**)($esp+0x8)
+define print_dlc
+  set $list_head = $arg0
   set $node = *(void**)$list_head
   while $node != $list_head
     printf "GUID: "
@@ -170,38 +185,145 @@ define print_guids
 end
 ```
 
+```
+print_dlc *(void**)($sp+0x8)
+print_dlc *(void**)($sp+0x4)+0x5d4
+```
+
 Print Mods:
 
 ```
-x/20xw *(void**)($sp+0xc)
+define print_mods
+  set $list_head = $arg0
+  set $node = *(void**)$list_head
+  while $node != $list_head
+    printf "GUID: "
+    x/s $node+8
+    set $node = *(void**)$node
+  end
+end
+```
+
+```
+print_mods *(void**)($sp+0xc)
+print_mods *(void**)($sp+0x4)+0x5e0
 ```
 
 #### Content of DLC/mods in SetActiveDLCandMods
 
 - First starting the game
   1. CivBEApp::SetupDLL
-  - DLC
-    - Expansion 1
-    - Maps
-  - Mods: none?
+     - Enabled DLC in param 3
+     - No DLC in param 1
+     - No mods
   1. cvLuaModdingLibrary::lActivateAllowedDLC
-  - DLC
-    - Expansion 1
-    - Maps
-  - Mods: none?
+     - Enabled DLC in param 3
+     - Activated DLC in param 1 (matches DLC in param 3)
+     - No mods
 - Deactivate/activate DLC from DLC menu
   1. CvModdingFrameworkAppSide::DeactivateMods
-     - DLC: list of activated DLC
-     - Mods: none
+     - Enabled DLC in param 3 (all checked DLC)
+     - Activated DLC in param 1 (previously activated DLC)
+     - No mods
   1. cvLuaModdingLibrary::lActivateAllowedDLC
-     - DLC: list of activated DLC
-     - Mods: none
+     - Same as above
   1. cvLuaModdingLibrary::lActivateAllowedDLC
-     - DLC: list of activated DLC
-     - Mods: none
+     - Same as above
 - Activating mods from Mods menu
   1. cvLuaModdingLibrary::lActivateEnabledMods > CvModdingFrameworkAppSide::ActivateModsAndDLCForEnabledMods
-     - DLC: list of activated DLC, e.g.
-       - Expansion 1
-       - Maps
-     - Mods: list of activated mods
+     - Enabled DLC in param 3
+     - Activated DLC in param 1 (matches DLC in param 3)
+     - Enabled mods in param 2
+     - No mods in param 1
+- Leaving the mods menu
+  1. CvModdingFrameworkAppSide::DeactivateMods
+     - Enabled DLC in param 3
+     - Activated DLC in param 1 (matches DLC in param 3)
+     - No mods in param 2
+     - Previously enabled mods in param 1
+  1. cvLuaModdingLibrary::lActivateAllowedDLC
+     - Same as above
+- Activating a mod from the Mods menu that requires a different DLC
+  1. CvModdingFrameworkAppSide::ActivateModsAndDLCForEnabledMods
+     - DLC required by mod in param 3
+     - Currently activated DLC in param 1
+     - Enabled mods in param 2
+     - No mods in param 1
+  1. cvLuaModdingLibrary::lActivateAllowedDLC
+     - Enabled DLC in param 3
+     - Activated DLC in param 1 (matches DLC in param 3)
+     - No mods in param 2
+     - Enabled mods in param 1
+  1. cvLuaModdingLibrary::lActivateAllowedDLC
+     - Enabled DLC in param 3
+     - Activated DLC in param 1 (matches DLC in param 3)
+     - No mods
+  1. Kicks back to main menu, then do the same thing again in the Mods menu
+  1. CvModdingFrameworkAppSide::ActivateModsAndDLCForEnabledMods
+     - Enabled DLC in param 3
+     - Activated DLC in param 1 (matches DLC in param 3)
+     - Enabled mods in param 2
+     - No mods in param 1
+  1. The game seems to work fine 🤔
+
+## Proposed logic
+
+#### Solution 1
+
+Ideal; only applies workaround to minimum number of cases
+
+```c++
+// Only apply the logic for mods and when DLC is already activated
+if (num_mods_to_activate != 0 &&
+    cvContentPackageIDList::operator==(activated_dlc,dlc_to_activate)) {
+        // skip LoadCvGameCoreDLL
+```
+
+Test cases
+
+- [ ] Game with DLC, without mods
+- [ ] Game without DLC, game without mods
+- [ ] Game with DLC, with mods
+- [ ] Game without DLC, with mod that doesn't require DLC
+- [ ] Game without DLC, with mod that requires DLC
+- [ ] Game with DLC, with mod that requires base game
+- [ ] Saved game, without mods
+- [ ] Saved game, with mods
+
+#### Solution 2
+
+Possible speed improvement, but what would the side effects be to non-modded games?
+
+```c++
+// Only apply the logic when DLC is already activated
+if (cvContentPackageIDList::operator==(activated_dlc,dlc_to_activate)) {
+        // skip LoadCvGameCoreDLL
+```
+
+- [ ] Game with DLC, without mods
+- [ ] Game without DLC, game without mods
+- [ ] Game with DLC, with mods
+- [ ] Game without DLC, with mod that doesn't require DLC
+- [ ] Game without DLC, with mod that requires DLC
+- [ ] Game with DLC, with mod that requires base game
+- [ ] Saved game, without mods
+- [ ] Saved game, with mods
+
+#### Solution 3
+
+Simplest solution, but would it work with mods that need specific DLC?
+
+```c++
+// Only apply the logic for mods
+if (num_mods_to_activate != 0) {
+        // skip LoadCvGameCoreDLL
+```
+
+- [ ] Game with DLC, without mods
+- [ ] Game without DLC, game without mods
+- [ ] Game with DLC, with mods
+- [ ] Game without DLC, with mod that doesn't require DLC
+- [ ] Game without DLC, with mod that requires DLC
+- [ ] Game with DLC, with mod that requires base game
+- [ ] Saved game, without mods
+- [ ] Saved game, with mods

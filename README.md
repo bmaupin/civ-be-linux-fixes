@@ -1,4 +1,4 @@
-Fixes and workarounds for various crashes with Sid Meier's Civilization: Beyond Earth on Linux
+Fixes and workarounds for various bugs with Sid Meier's Civilization: Beyond Earth on Linux
 
 💡 [See my other Civ projects here](https://github.com/search?q=user%3Abmaupin+topic%3Acivilization&type=Repositories)
 
@@ -77,3 +77,26 @@ This all seems to work fine except in one situation: when CvGameCoreDLL is loade
 The patch works around this by skipping the unload/load of CvGameCoreDLL in certain situations. Originally I was going to skip it when mods are in use, but I was concerned that this would break mods that require or are incompatible with the currently loaded DLC. So instead, the patch instead checks if the currently activated DLC match the DLC that are needed. If they match, there should be no need to unload/load CvGameCoreDLL and so it's skipped.
 
 For more details, see [docs/mod-crash-patch-details.md](docs/mod-crash-patch-details.md)
+
+## Terrain is not displayed correctly
+
+> The Terrain appears above cities and units, no water or hills are visible.
+
+([https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219))
+
+In addition, this bug seems to prevent the game from exiting normally. The game will continue running after it's exited and you must press _Stop_ in Steam to stop it.
+
+#### Fix
+
+```
+sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/ui/ingame/worldview/diplocorner.lua"
+sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/dlc/expansion1/ui/ingame/worldview/diplocorner.lua"
+```
+
+If it continues happening, it may be due to a mod. See here for more information: [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219)
+
+#### Explanation
+
+This terrain bug seems to appear any time there are errors with Lua scripts. This normally occurs with mods but unfortunately, the game (at least the Linux version) ships with a Lua error, and so this bug will occur without any mods installed.
+
+The Lua error in question seems to be a reference to a "culture overview UI" button. As best as I can tell, this code was copied from Civ 5 as this button doesn't even seem to exist in Beyond Earth.

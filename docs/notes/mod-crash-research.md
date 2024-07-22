@@ -342,10 +342,12 @@ local gameSpeedType = GameInfo.GameSpeeds["GAMESPEED_STANDARD"].ID;
 
 #### Stopwatch.log
 
+```
 [197.309] , Discovering Base Game Maps, 0.000205
 [225.142] , Discovering Base Game Maps, 0.000211
 [225.143] , Discovering Base Game Map Scripts, 0.000533
 [225.143] , Discovering Modder Map Scripts, 0.000057
+```
 
 #### Debug
 

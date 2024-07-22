@@ -2,7 +2,7 @@ Fixes and workarounds for various crashes with Sid Meier's Civilization: Beyond 
 
 💡 [See my other Civ projects here](https://github.com/search?q=user%3Abmaupin+topic%3Acivilization&type=Repositories)
 
-## Game crashes within 10 turns
+## Game starts but crashes within 10 turns
 
 The game successfully starts but crashes within 10 turns or so
 
@@ -14,9 +14,9 @@ cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.
 
 #### Explanation
 
-The CivBE binary requires the shared library libtbb.so.2 (Intel's Threading Building Blocks, now [oneTBB](https://github.com/oneapi-src/oneTBB)). If this isn't installed on the system then Steam seems to automatically use the library from Steam Linux Runtime 1.0 (scout). However, if this libary is installed on the system, the game will use the system library instead. Unfortunately it seems the version of the library included with modern Linux distributions isn't backwards compatible.
+The CivBE binary requires the shared library libtbb.so.2 ([Threading Building Blocks](https://github.com/oneapi-src/oneTBB)). Steam seems to automatically use the library from Steam Linux Runtime but if it's installed on the system Steam will use that instead, and the system library seems to cause the crash.
 
-The fix copies the library from the Steam Linux Runtime to the game directory so it will always use that version even if a different version is installed on the system.
+This copies the library from the Steam Linux Runtime to the game directory which ensures it's always used.
 
 ## Game crashes before it starts when using mods
 
@@ -75,3 +75,5 @@ When a CvGameCoreDLL is loaded, the Lua interpreter seems to have some sort of r
 This all seems to work fine except in one situation: when CvGameCoreDLL is loaded because of mods, the memory address changes but it doesn't seem to be properly updated in the Lua interpreter. So as soon as a game starts and tries to call a Lua function in CvGameCoreDLL, it crashes.
 
 The patch works around this by skipping the unload/load of CvGameCoreDLL in certain situations. Originally I was going to skip it when mods are in use, but I was concerned that this would break mods that require or are incompatible with the currently loaded DLC. So instead, the patch instead checks if the currently activated DLC match the DLC that are needed. If they match, there should be no need to unload/load CvGameCoreDLL and so it's skipped.
+
+For more details, see [docs/mod-crash-patch-details.md](docs/mod-crash-patch-details.md)

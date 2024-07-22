@@ -24,7 +24,7 @@ The game will crash just before starting if any mods are used
 
 #### Fix
 
-⚠️ This is a work in progress and testing is ongoing
+⚠️ This is not a proper fix, only a workaround; it may have unintended consequences.
 
 1. Download [CivBE.patch](CivBE.patch)
 1. Apply the patch
@@ -42,27 +42,6 @@ To uninstall the patch:
 1. Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
 
 1. _Installed Files_ > _Verify integrity of game files_
-
-#### Caveats
-
-- This is not a proper fix, only a workaround. It may have unintended consequences.
-- Testing is ongoing. I've only tested it with a couple simple mods so far.
-- If a particular mod requires (or is incompatible with) a DLC that's already loaded, the game will unload/load the needed DLC and then go back to the main menu. Then you will need to go into the Mods menu and load the mod again. As best as I can tell this is normal behaviour and not related to this patch.
-- Some mods are only compatible with the base game or with Rising Tide but don't have this compatibility defined in the mod configuration file. If this is the case, you will need to load/unload the needed DLC in the DLC menu before loading the mod. Again, this behaviour is unrelated to this patch but worth noting. Mod developers should update mod configuration to include compatibility, for example a mod that requires Rising Tide should have this configuration in its `.modinfo` file:
-
-  ```xml
-  <Dependencies>
-    <Dlc id="54D2B257-C591-4045-8F17-A69F033166C7" minversion="0" maxversion="9999" />
-  </Dependencies>
-  ```
-
-  Or for a mod that requires the base game:
-
-  ```xml
-  <Blocks>
-    <Dlc id="54D2B257-C591-4045-8F17-A69F033166C7" minversion="0" maxversion="9999" />
-  </Blocks>
-  ```
 
 #### Explanation
 
@@ -100,3 +79,39 @@ If it continues happening, it may be due to a mod. See here for more information
 This terrain bug seems to appear any time there are errors with Lua scripts. This normally occurs with mods but unfortunately, the game (at least the Linux version) ships with a Lua error, and so this bug will occur without any mods installed.
 
 The Lua error in question seems to be a reference to a "culture overview UI" button. As best as I can tell, this code was copied from Civ 5 as this button doesn't even seem to exist in Beyond Earth.
+
+## Other issues
+
+#### Mods aren't loaded when a save game is loaded
+
+When loading a save game that was created using a mod, the mod may not be loaded automatically. This seems to be intended behaviour when a mod does not indicate in its configuration that it affects save games. If you wish to load a particular mod with a saved game, first load the mod through the _Mods_ menu and then load the saved game.
+
+If a particular mod should always be loaded with saved games, the mod developer should update the mod configuration to reflect this by including this in its `.modinfo` file:
+
+```xml
+<AffectsSavedGames>1</AffectsSavedGames>
+```
+
+#### Loading a mod sends the game back to the main menu
+
+If a particular mod requires (or is incompatible with) a DLC that's already loaded, the game will unload/load the needed DLC and then go back to the main menu. Then you will need to go into the _Mods_ menu and load the mod again. This is normal behaviour, at least for the native Linux version.
+
+#### The game crashes or has problems with a particular mod
+
+Some mods are only compatible with the base game or with Rising Tide but don't have this compatibility defined in the mod configuration file. If this is the case, you will need to load/unload the needed DLC in the _DLC_ menu before loading the mod. Again, this behaviour is unrelated to this patch but worth noting. Mod developers should update mod configuration to include compatibility, for example a mod that requires Rising Tide should have this configuration in its `.modinfo` file:
+
+```xml
+<Dependencies>
+  <Dlc id="54D2B257-C591-4045-8F17-A69F033166C7" minversion="0" maxversion="9999" />
+</Dependencies>
+```
+
+Or for a mod that requires the base game:
+
+```xml
+<Blocks>
+  <Dlc id="54D2B257-C591-4045-8F17-A69F033166C7" minversion="0" maxversion="9999" />
+</Blocks>
+```
+
+For more help on troubleshooting issues with mods, see [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601)

@@ -2,7 +2,41 @@ Fixes and workarounds for various bugs with Sid Meier's Civilization: Beyond Ear
 
 💡 [See my other Civ projects here](https://github.com/search?q=user%3Abmaupin+topic%3Acivilization&type=Repositories)
 
-## Game starts but crashes within 10 turns
+## All-in-one patch script
+
+Use the provided all-in-one patch script to apply all of the fixes listed below:
+
+1. Download the patch script: [patchcivbe.sh](patchcivbe.sh)
+
+1. (Optional) Open the patch script and comment out any undesired changes
+
+1. Run the patch script
+
+   ```
+   ./patchcivbe.sh
+   ```
+
+   ⓘ It will default to `"/home/${USER}/.steam/steam/steamapps/common/Sid Meier's Civilization Beyond Earth"` for the Beyond Earth installation directory. If you have it installed somewhere else you can provide it as a parameter to the script, e.g.
+
+   ```
+   ./patchcivbe.sh /some/other/path
+   ```
+
+⚠️ If you uninstall the game or verify the integrity of the game files, the patches will be uninstalled and will need to be re-applied.
+
+## Uninstall
+
+To uninstall the all-in-one patch script or undo any other changes below:
+
+1. Open Steam and go to _Library_
+
+1. Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
+
+1. _Installed Files_ > _Verify integrity of game files_
+
+## Individual bugs and fixes
+
+### Game starts but crashes within 10 turns
 
 The game successfully starts but crashes within 10 turns or so
 
@@ -18,7 +52,7 @@ The CivBE binary requires the shared library libtbb.so.2 ([Threading Building Bl
 
 This copies the library from the Steam Linux Runtime to the game directory which ensures it's always used.
 
-## Game crashes before it starts when using mods
+### Game crashes before it starts when using mods
 
 The game will crash just before starting if any mods are used
 
@@ -35,14 +69,6 @@ The game will crash just before starting if any mods are used
 
    ⓘ The patch will also enable acheivements when playing with mods. If you don't want this behaviour, change `32` in the last line of the patch to `31` and re-apply it. See [https://github.com/bmaupin/civ5-cheevos-with-mods](https://github.com/bmaupin/civ5-cheevos-with-mods) for more information.
 
-To uninstall the patch:
-
-1. Open Steam and go to _Library_
-
-1. Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
-
-1. _Installed Files_ > _Verify integrity of game files_
-
 #### Explanation
 
 The game has implemented Rising Tide and the base game as shared "CvGameCoreDLL" libraries so they can be loaded and unloaded at runtime to change between the two.
@@ -57,7 +83,7 @@ The patch works around this by skipping the unload/load of CvGameCoreDLL in cert
 
 For more details, see [docs/mod-crash-patch-details.md](docs/mod-crash-patch-details.md)
 
-## Terrain is not displayed correctly
+### Terrain is not displayed correctly
 
 > The Terrain appears above cities and units, no water or hills are visible.
 
@@ -68,8 +94,8 @@ In addition, this bug seems to prevent the game from exiting normally. The game 
 #### Fix
 
 ```
-sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/ui/ingame/worldview/diplocorner.lua"
-sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/dlc/expansion1/ui/ingame/worldview/diplocorner.lua"
+sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "/home/${USER}/.steam/steam/steamapps/common/Sid Meier's Civilization Beyond Earth/steamassets/assets/ui/ingame/worldview/diplocorner.lua"
+sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "/home/${USER}/.steam/steam/steamapps/common/Sid Meier's Civilization Beyond Earth/steamassets/assets/dlc/expansion1/ui/ingame/worldview/diplocorner.lua"
 ```
 
 If it continues happening, it may be due to a mod. See here for more information: [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219)
@@ -79,6 +105,14 @@ If it continues happening, it may be due to a mod. See here for more information
 This terrain bug seems to appear any time there are errors with Lua scripts. This normally occurs with mods but unfortunately, the game (at least the Linux version) ships with a Lua error, and so this bug will occur without any mods installed.
 
 The Lua error in question seems to be a reference to a "culture overview UI" button. As best as I can tell, this code was copied from Civ 5 as this button doesn't even seem to exist in Beyond Earth.
+
+### Sound issues
+
+#### Fix
+
+```
+cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
+```
 
 ## Other issues
 

@@ -52,6 +52,8 @@ The CivBE binary requires the shared library libtbb.so.2 ([Threading Building Bl
 
 This copies the library from the Steam Linux Runtime to the game directory which ensures it's always used.
 
+Interestingly enough, Civ 5 includes this file; I'm not sure why they didn't do the same for Beyond Earth: [https://steamdb.info/depot/282301/](https://steamdb.info/depot/282301/)
+
 ### Game crashes before it starts when using mods
 
 The game will crash just before starting if any mods are used
@@ -81,6 +83,8 @@ This all seems to work fine except in one situation: when CvGameCoreDLL is loade
 
 The patch works around this by skipping the unload/load of CvGameCoreDLL in certain situations. Originally I was going to skip it when mods are in use, but I was concerned that this would break mods that require or are incompatible with the currently loaded DLC. So instead, the patch instead checks if the currently activated DLC match the DLC that are needed. If they match, there should be no need to unload/load CvGameCoreDLL and so it's skipped.
 
+I filed a support ticket with Aspyr but they said "Unfortunately we are not able to assist with bugs that arise when using community mods." 🤷‍♂️
+
 For more details, see [docs/mod-crash-patch-details.md](docs/mod-crash-patch-details.md)
 
 ### Terrain is not displayed correctly
@@ -102,17 +106,25 @@ If it continues happening, it may be due to a mod. See here for more information
 
 #### Explanation
 
-This terrain bug seems to appear any time there are errors with Lua scripts. This normally occurs with mods but unfortunately, the game (at least the Linux version) ships with a Lua error, and so this bug will occur without any mods installed.
+This terrain bug seems to appear any time there are errors with Lua scripts. This normally occurs with mods but unfortunately, the game ships with a Lua error, and so this bug will occur without any mods installed.
 
 The Lua error in question seems to be a reference to a "culture overview UI" button. As best as I can tell, this code was copied from Civ 5 as this button doesn't even seem to exist in Beyond Earth.
 
+The bug also seems to exist in the non-Linux versions of the game but I'm not sure if they exhibit the same behaviour.
+
 ### Sound issues
+
+I haven't been able to reproduce this myself but I have seen reports of users mentioning audio issues, such as the game music will completely stop after a certain time.
 
 #### Fix
 
 ```
 cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
 ```
+
+#### Explanation
+
+As with the libtbb.so.2 fix above, this is a required library that isn't included in the game, and it's possible there could be a library compatibility issue with a system library.
 
 ## Other issues
 

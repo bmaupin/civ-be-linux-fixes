@@ -69,12 +69,18 @@ patch=$(cat << 'EOF'
 00a17f37: 90
 EOF
 )
-xxd -c1 -r <(echo "$patch") "${game_directory}/CivBE"
+checksum=$(md5sum "${game_directory}/CivBE" | awk '{print $1}')
+# Unmodified
+if [ "$checksum" = "316a3d1b2c29fbe6b59a7cc04c240808" ] ||
+    # Cheevo patch has been applied
+    [ "$checksum" = "6e29371fd4e8f573e7f29426e314dd7f" ]; then
+    xxd -c1 -r <(echo "$patch") "${game_directory}/CivBE"
+fi
 
 echo "Deleting intro logo videos"
-rm "${game_directory}/steamassets/%aspyr.bk2"
-rm "${game_directory}/steamassets/aspyr.bk2"
-rm "${game_directory}/steamassets/civbe_logos.bk2"
+rm -f "${game_directory}/steamassets/%aspyr.bk2"
+rm -f "${game_directory}/steamassets/aspyr.bk2"
+rm -f "${game_directory}/steamassets/civbe_logos.bk2"
 
 echo "Enabling achievements with mods"
 sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivBE"

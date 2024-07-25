@@ -126,7 +126,7 @@ cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopen
 
 As with the libtbb.so.2 fix above, this is a required library that isn't included in the game, and it's possible there could be a library compatibility issue with a system library.
 
-## Other issues
+## Troubleshooting
 
 #### Mods aren't loaded when a save game is loaded
 
@@ -161,3 +161,30 @@ Or for a mod that requires the base game:
 ```
 
 For more help on troubleshooting issues with mods, see [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601)
+
+#### Other issues
+
+If you're experiencing another issue, make sure the game isn't missing any needed libraries
+
+1. List the shared libraries needed, e.g.
+
+   ```
+   cd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
+   ldd CivBE
+   ```
+
+1. Look for any missing libraries in the output, e.g.
+
+   ```
+   libopenal.so.1 => not found
+   ```
+
+1. If possible, copy the missing library from the Steam Linux runtime, e.g.
+
+   ```
+   cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
+   ```
+
+1. If the Steam Linux runtime doesn't have the missing library, install it on your system using your package manager
+
+   👉 Make sure to install the 32-bit version of library as the game is 32-bit

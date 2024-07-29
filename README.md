@@ -136,7 +136,14 @@ If a particular mod should always be loaded with saved games, the mod developer 
 
 ```xml
 <AffectsSavedGames>1</AffectsSavedGames>
+<MinCompatibleSaveVersion>0</MinCompatibleSaveVersion>
 ```
+
+`MinCompatibleSaveVersion` should be set to the minimum version of the mod that the current version of the mod is compatible with.
+
+⚠️ If `MinCompatibleSaveVersion` isn't in the `.modinfo` file, you will never be able to load a save game created with the mod. Instead, you will always see this message:
+
+> Not all required mods are installed.
 
 #### Loading a mod sends the game back to the main menu
 

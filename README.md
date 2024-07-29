@@ -209,3 +209,5 @@ If you're experiencing another issue, make sure the game isn't missing any neede
 1. If the Steam Linux runtime doesn't have the missing library, install it on your system using your package manager
 
    👉 Make sure to install the 32-bit version of library as the game is 32-bit
+
+For more information, see [https://wiki.archlinux.org/title/Steam/Game-specific_troubleshooting#Civilization:\_Beyond_earth](https://wiki.archlinux.org/title/Steam/Game-specific_troubleshooting#Civilization:_Beyond_earth)

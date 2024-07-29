@@ -162,6 +162,20 @@ Or for a mod that requires the base game:
 
 For more help on troubleshooting issues with mods, see [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601)
 
+#### No dialogue audio from other leaders
+
+If you don't hear the dialogue speech audio from other leaders, this is counterintuitively caused by a setting in the game's video options:
+
+1. Start Beyond Earth
+
+1. In the main menu, go to _Options_ > _Video Options_
+
+1. Check _Show Advanced Options_
+
+1. Set _Leader Scene Quality_ to _Low_ or higher
+
+   ⓘ If _Leader Scene Quality_ is set to _Minimum_, this disables the leader dialogue audio and animations
+
 #### Other issues
 
 If you're experiencing another issue, make sure the game isn't missing any needed libraries

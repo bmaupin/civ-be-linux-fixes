@@ -87,6 +87,14 @@ I filed a support ticket with Aspyr but they said "Unfortunately we are not able
 
 For more details, see [docs/mod-crash-patch-details.md](docs/mod-crash-patch-details.md)
 
+### The game crashes loading a saved game with mods and different DLC
+
+For example, if you have Rising Tide enabled and you try to load a saved game that was created with a mod and with Rising Tide disabled, the game will crash. This crash seems to be unrelated to the crash mentioned above that happens when trying to start any game using mods, and so the patch for that issue does not fix this one.
+
+#### Workaround
+
+Thankfully there's a workaround: simply load/unload the necessary DLC before loading the saved game. For example, if the saved game was created without Rising Tide, unload the Rising Tide DLC in the _DLC_ menu first and then load the saved game.
+
 ### Terrain is not displayed correctly
 
 > The Terrain appears above cities and units, no water or hills are visible.
@@ -127,6 +135,8 @@ cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopen
 As with the libtbb.so.2 fix above, this is a required library that isn't included in the game, and it's possible there could be a library compatibility issue with a system library.
 
 ## Troubleshooting
+
+ⓘ This section is for other unexpected behaviour not necessarily related to a specific bug
 
 #### Mods aren't loaded when a save game is loaded
 

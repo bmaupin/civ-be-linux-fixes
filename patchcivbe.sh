@@ -84,3 +84,13 @@ rm -f "${game_directory}/steamassets/civbe_logos.bk2"
 
 echo "Enabling achievements with mods"
 sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivBE"
+
+# https://forums.civfanatics.com/threads/spoiler-all-starships-unlockables-for-beyond-earth.544763/
+echo "Unlock Starships unlockables"
+sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecargo.xml"
+sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecolonists.xml"
+sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbespacecraft.xml"
+sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/inland_sea.lua"
+sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/tiny_islands.lua"
+sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/inland_sea.lua"
+sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/tiny_islands.lua"

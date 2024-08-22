@@ -86,7 +86,8 @@ echo "Enabling achievements with mods"
 sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivBE"
 
 # https://forums.civfanatics.com/threads/spoiler-all-starships-unlockables-for-beyond-earth.544763/
-echo "Unlock Starships unlockables"
+# These all require linking with 2K games account, which is apparently no longer possible, hence the patch
+echo "Unlocking Starships unlockables"
 sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecargo.xml"
 sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecolonists.xml"
 sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbespacecraft.xml"
@@ -94,3 +95,5 @@ sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/i
 sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/tiny_islands.lua"
 sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/inland_sea.lua"
 sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/tiny_islands.lua"
+sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/maps/ice_age.lua"
+sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/ice_age.lua"

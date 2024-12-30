@@ -38,21 +38,13 @@ To uninstall the all-in-one patch script or undo any other changes below:
 
 ### Game starts but crashes within 10 turns
 
-The game successfully starts but crashes within 10 turns or so
-
-#### Fix
+If the game successfully starts but crashes within 10 turns or so, run this command
 
 ```
 cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
 ```
 
-#### Explanation
-
-The CivBE binary requires the shared library libtbb.so.2 ([Threading Building Blocks](https://github.com/oneapi-src/oneTBB)). Steam seems to automatically use the library from Steam Linux Runtime but if it's installed on the system Steam will use that instead, and the system library seems to cause the crash.
-
-This copies the library from the Steam Linux Runtime to the game directory which ensures it's always used.
-
-Interestingly enough, Civ 5 includes this file; I'm not sure why they didn't do the same for Beyond Earth: [https://steamdb.info/depot/282301/](https://steamdb.info/depot/282301/)
+For more information, see [docs/libtbb-details.md](docs/libtbb-details.md)
 
 ### Game crashes before it starts when using mods
 

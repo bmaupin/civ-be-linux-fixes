@@ -36,6 +36,28 @@ To uninstall the all-in-one patch script or undo any other changes below:
 
 ## Individual bugs and fixes
 
+### Game crashes before it starts or within a few seconds
+
+1. Get the number of cores your system has:
+
+   ```
+   nproc --all
+   ```
+
+1. If you have more than 8 cores:
+
+   1. Open Steam and go to _Library_
+
+   1. Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
+
+   1. Under _Launch Options_, add this:
+
+      ```
+      taskset -c 0-7 %command%
+      ```
+
+Source: [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481)
+
 ### Game starts but crashes within 10 turns
 
 If the game successfully starts but crashes within 10 turns or so, run this command

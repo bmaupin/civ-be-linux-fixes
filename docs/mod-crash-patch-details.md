@@ -1,5 +1,19 @@
 # Mod crash patch details
 
+#### Explanation
+
+The game has implemented Rising Tide and the base game as shared "CvGameCoreDLL" libraries so they can be loaded and unloaded at runtime to change between the two.
+
+For example, when the game is first started with Rising Tide enabled, the Rising Tide CvGameCoreDLL is loaded as soon as the game is started. Or if the Rising Tide DLC is disabled in the game through the DLC menu, its CvGameCoreDLL is unloaded and the base game CvGameCoreDLL loaded, and vice-versa. When mods are loaded, the CvGameCoreDLL seems to be unloaded and then loaded again, even if it's the one that's already loaded (which, although inefficient, isn't necessarily a problem).
+
+When a CvGameCoreDLL is loaded, the Lua interpreter seems to have some sort of reference to the memory address where it's loaded so that it is able to call Lua functions in CvGameCoreDLL. When a CvGameCoreDLL is unloaded and a different one is loaded, the memory address in the Lua interpreter is updated.
+
+This all seems to work fine except in one situation: when CvGameCoreDLL is loaded because of mods, the memory address changes but it doesn't seem to be properly updated in the Lua interpreter. So as soon as a game starts and tries to call a Lua function in CvGameCoreDLL, it crashes.
+
+The patch works around this by skipping the unload/load of CvGameCoreDLL in certain situations. Originally I was going to skip it when mods are in use, but I was concerned that this would break mods that require or are incompatible with the currently loaded DLC. So instead, the patch instead checks if the currently activated DLC match the DLC that are needed. If they match, there should be no need to unload/load CvGameCoreDLL and so it's skipped.
+
+I filed a support ticket with Aspyr but they said "Unfortunately we are not able to assist with bugs that arise when using community mods." 🤷‍♂️
+
 #### Process for developing patch
 
 I first ran CivBE (the Beyond Earth binary) with gdb and attempted to start a new game with a mod. The game crashed, so I did a backtrace (`bt`) and this is what I saw:

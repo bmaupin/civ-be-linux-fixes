@@ -1,4 +1,6 @@
-# libtbb details
+# More details
+
+## libtbb
 
 The CivBE binary requires the shared library libtbb.so.2 ([Threading Building Blocks](https://github.com/oneapi-src/oneTBB)). Civ 5 also requires this file and includes it in the installation ([https://steamdb.info/depot/282301/](https://steamdb.info/depot/282301/)), but Beyond Earth doesn't.
 
@@ -34,3 +36,15 @@ $ ldd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
 ```
 
 The fix listed in the [readme](../README.md) involves copying libtbb from the Steam Linux Runtime to the game directory. This ensures this version is always used, even if it's installed elsewhere on the system.
+
+## Terrain is not displayed correctly
+
+The terrain bug seems to appear any time there are errors with Lua scripts. This normally occurs with mods but unfortunately, the game ships with a Lua error, and so this bug will occur without any mods installed.
+
+The Lua error in question seems to be a reference to a "culture overview UI" button. As best as I can tell, this code was copied from Civ 5 as this button doesn't even seem to exist in Beyond Earth.
+
+The bug also seems to exist in the non-Linux versions of the game but I'm not sure if they exhibit the same behaviour.
+
+## libopenal
+
+As with the libtbb.so.2 fix above, this is a required library that isn't included in the game, and it's possible there could be a library compatibility issue with a system library.

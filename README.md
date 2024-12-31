@@ -66,7 +66,7 @@ If the game successfully starts but crashes within 10 turns or so, run this comm
 cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
 ```
 
-See [here](docs/more-details.md#libtbb) for more information.
+See [here](docs/more-details.md#game-starts-but-crashes-within-10-turns) for more information.
 
 ### Game crashes before it starts when using mods
 
@@ -87,9 +87,7 @@ If this happens, simply load/unload the necessary DLC before loading the saved g
 
 For example, if you have Rising Tide enabled and you try to load a saved game that was created with a mod and with Rising Tide disabled, the game will crash unless you first unload the Rising Tide DLC before loading the saved game.
 
-### Terrain is not displayed correctly
-
-> The Terrain appears above cities and units, no water or hills are visible.
+### Terrain appears above cities and units, no water or hills are visible
 
 In addition, this bug seems to prevent the game from exiting normally. The game will continue running after it's exited and you must press _Stop_ in Steam to stop it.
 
@@ -102,7 +100,16 @@ sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.Is
 
 If it continues happening, it may be due to a mod. See [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601#882219)
 
-See [here](docs/more-details.md#terrain-is-not-displayed-correctly) for more information.
+See [here](docs/more-details.md#terrain-appears-above-cities-and-units-no-water-or-hills-are-visible) for more information.
+
+### Terrain is black
+
+I'm not sure of the fix for this, but here are some places to check:
+
+- [https://steamcommunity.com/app/65980/discussions/0/530646080851443982/](https://steamcommunity.com/app/65980/discussions/0/530646080851443982/)
+- [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=54#c144513248279481346](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=54#c144513248279481346)
+- [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135507780430381518](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135507780430381518)
+- [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135508662492314124](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135508662492314124)
 
 ### Sound issues
 
@@ -112,7 +119,7 @@ This might fix sound issues, such as the game music will completely stop after a
 cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
 ```
 
-See [here](docs/more-details.md#libopenal) for more information.
+See [here](docs/more-details.md#sound-issues) for more information.
 
 ## Troubleshooting
 

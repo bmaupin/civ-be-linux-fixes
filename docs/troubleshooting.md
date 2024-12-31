@@ -1,6 +1,6 @@
 # Troubleshooting
 
-ⓘ This section is for other unexpected behaviour not necessarily related to a specific bug
+ⓘ This page has more information for troubleshooting issues not related to a specific bug. See the [readme](../README.md) for specific bugs and fixes.
 
 ## Mods aren't loaded when a save game is loaded
 
@@ -23,9 +23,25 @@ If a particular mod should always be loaded with saved games, the mod developer 
 
 If a particular mod requires (or is incompatible with) a DLC that's already loaded, the game will unload/load the needed DLC and then go back to the main menu. Then you will need to go into the _Mods_ menu and load the mod again. This is normal behaviour, at least for the native Linux version.
 
-## The game crashes or has problems with a particular mod
+## The game crashes or has other problems when using mods
 
-Some mods are only compatible with the base game or with Rising Tide but don't have this compatibility defined in the mod configuration file. If this is the case, you will need to load/unload the needed DLC in the _DLC_ menu before loading the mod. Again, this behaviour is unrelated to this patch but worth noting. Mod developers should update mod configuration to include compatibility, for example a mod that requires Rising Tide should have this configuration in its `.modinfo` file:
+Beyond Earth is particularly sensitive to bugs in mods and they can cause the game to crash or exhibit other undesired behaviour such as not properly showing the terrain.
+
+To troubleshoot:
+
+1. First, make sure the mod patch in the [readme](../README.md) is installed
+
+1. Check the [readme](../README.md) for any other fixes that may apply to you
+
+1. The mod may require specific DLC or no DLC to work. Go to the _DLC_ menu in the game to load or unload DLC.
+
+1. Try each mod one at a time in case there are incompatibilities
+
+1. See here for more information: [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601)
+
+#### More info
+
+Some mods are only compatible with the base game or with Rising Tide but don't have this compatibility defined in the mod configuration file. If this is the case, you will need to load/unload the needed DLC in the _DLC_ menu before loading the mod. Mod developers should update mod configuration to include compatibility, for example a mod that requires Rising Tide should have this configuration in its `.modinfo` file:
 
 ```xml
 <Dependencies>
@@ -40,8 +56,6 @@ Or for a mod that requires the base game:
   <Dlc id="54D2B257-C591-4045-8F17-A69F033166C7" minversion="0" maxversion="9999" />
 </Blocks>
 ```
-
-For more help on troubleshooting issues with mods, see [https://steamcommunity.com/sharedfiles/filedetails/?id=569681601](https://steamcommunity.com/sharedfiles/filedetails/?id=569681601)
 
 ## No dialogue audio from other leaders
 

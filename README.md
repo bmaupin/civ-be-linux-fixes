@@ -1,6 +1,8 @@
-Various fixes and workarounds for Sid Meier's Civilization: Beyond Earth on Linux and Steam Deck
+Various fixes and workarounds for Sid Meier's Civilization: Beyond Earth on Linux
 
-💡 [See my other Civ projects here](https://github.com/search?q=user%3Abmaupin+topic%3Acivilization&type=Repositories)
+📌 [See my other Civ projects here](https://github.com/search?q=user%3Abmaupin+topic%3Acivilization&type=Repositories)
+
+💡 Much of the information here may also apply to the Steam Deck
 
 ## All-in-one patch script
 
@@ -68,7 +70,7 @@ cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.
 
 See [here](docs/more-details.md#game-starts-but-crashes-within-10-turns) for more information.
 
-### Game crashes before it starts when using mods
+### Game crashes when using mods
 
 The Linux version of Beyond Earth will always crash just before starting if any mods are used. To fix this:
 
@@ -121,6 +123,6 @@ cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopen
 
 See [here](docs/more-details.md#sound-issues) for more information.
 
-## Troubleshooting
+## Troubleshooting other issues
 
 See [here](docs/troubleshooting.md)

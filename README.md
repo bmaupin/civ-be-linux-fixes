@@ -106,7 +106,7 @@ See [here](docs/more-details.md#terrain-appears-above-cities-and-units-no-water-
 
 ### Terrain is black
 
-I'm not sure of the fix for this, but here are some places to check:
+TODO: What is the fix for this? Possible options:
 
 - [https://steamcommunity.com/app/65980/discussions/0/530646080851443982/](https://steamcommunity.com/app/65980/discussions/0/530646080851443982/)
 - [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=54#c144513248279481346](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=54#c144513248279481346)

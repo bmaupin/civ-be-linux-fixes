@@ -27,7 +27,16 @@ If a particular mod requires (or is incompatible with) a DLC that's already load
 
 Beyond Earth is particularly sensitive to bugs in mods and they can cause the game to crash or exhibit other undesired behaviour such as not properly showing the terrain.
 
-To troubleshoot:
+#### Read first
+
+One complication is that in some cases, an error or bug with a mod may not cause the current game to crash. However, an error may cause the next game that's played or loaded to crash unless you first exit Beyond Earth.
+
+This means that:
+
+- In some cases, the game won't crash even if there's an error if you only play one game before exiting Beyond Earth
+- If you wish to confirm an error, you can save the game and then load it right away during the same session
+
+#### To troubleshoot
 
 1. First, make sure the mod patch in the [readme](../README.md) is installed
 

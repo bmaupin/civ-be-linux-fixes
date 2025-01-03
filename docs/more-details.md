@@ -15,6 +15,32 @@ $ ldd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
 
 Unfortunately this is the wrong version of the library. The game should start but it will crash after a few turns.
 
+Here is an example segfault:
+
+```
+[New Thread 0x98987ac0 (LWP 45198)]
+
+Thread 50 "CivBE" received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x98987ac0 (LWP 45198)]
+0x08b71d76 in FireGrafix::DynamicsLock<Graphics::BuildingDataDynamicConsts>::DynamicsLock(Graphics::SurfaceSet**, FireGrafix::SurfaceSetPoolAllocator*, unsigned short) ()
+(gdb) bt
+#0  0x08b71d76 in FireGrafix::DynamicsLock<Graphics::BuildingDataDynamicConsts>::DynamicsLock(Graphics::SurfaceSet**, FireGrafix::SurfaceSetPoolAllocator*, unsigned short) ()
+#1  0x08c25f76 in cvLandmarkVisSystem::cvLandmarkVisDynamicConstantUpdaterSS::HandleBuildingShader(Graphics::FGXShaderPackageInstanceView*, FireGrafix::FGXModelNode*, FGXVector4*) ()
+#2  0x08c25f08 in cvLandmarkVisSystem::cvLandmarkVisDynamicConstantUpdaterSS::UpdateNode(Graphics::FGXShaderPackageInstanceView*, FireGrafix::FGXModelNode*, FGXVector4*) ()
+#3  0x08c25e2c in FireGrafix::FGXModelRenderByNodeSSExample_Shadow<cvLandmarkVisSystem::cvLandmarkVisDynamicConstantUpdaterSS, 2, FireGrafix::FGXModelRenderEndSuperclass>::RenderNode(unsigned int*, FireGrafix::FGX_SPIV_GENERIC*, FireGrafix::FGXModelNode*, FGXVector4*) ()
+#4  0x08c24ff5 in cvLandmarkVisSystem::LandmarkRenderJob::Execute(unsigned int) ()
+#5  0x093d26d9 in Platform::JobTask::execute() ()
+#6  0xf7667aee in ?? () from ./libtbb.so.2
+#7  0xf7667e3a in ?? () from ./libtbb.so.2
+#8  0xf7661011 in ?? () from ./libtbb.so.2
+#9  0xf765f5ca in ?? () from ./libtbb.so.2
+#10 0xf765b4c5 in ?? () from ./libtbb.so.2
+#11 0xf765b738 in ?? () from ./libtbb.so.2
+#12 0xf7486c01 in ?? () from /lib/i386-linux-gnu/libc.so.6
+#13 0xf752372c in ?? () from /lib/i386-linux-gnu/libc.so.6
+(gdb)
+```
+
 #### libtbb isn't installed anywhere
 
 When libtbb isn't installed, you should see this when you run the command below:

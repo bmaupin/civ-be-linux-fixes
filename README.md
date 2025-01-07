@@ -38,9 +38,19 @@ To uninstall the all-in-one patch script or other fixes below:
 
 ## Individual bugs and fixes
 
-### Game crashes before it starts or within a few seconds
+### Game crashes without mods
 
-1. Run this in a terminal to get the number of cores your system has:
+The game can crash just before a match starts, or even 20 turns in. This can be caused by a number of different things.
+
+1. First, run this command and then try again:
+
+   ```
+   cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
+   ```
+
+   See [here](docs/more-details.md#libtbb) for more information
+
+1. If it's still crashing, run this in a terminal to get the number of cores your system has:
 
    ```
    nproc --all
@@ -58,17 +68,7 @@ To uninstall the all-in-one patch script or other fixes below:
       taskset -c 0-7 %command%
       ```
 
-Source: [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481)
-
-### Game starts but crashes within 10 turns
-
-If the game successfully starts but crashes within 10 turns or so, run this command:
-
-```
-cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/
-```
-
-See [here](docs/more-details.md#game-starts-but-crashes-within-10-turns) for more information.
+   Source: [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481)
 
 ### Game crashes when using mods
 

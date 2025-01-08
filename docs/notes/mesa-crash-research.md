@@ -98,9 +98,30 @@ Thread 8 "CivBE" received signal SIGSEGV, Segmentation fault.
 
 #### Build Mesa from source
 
+References:
+
+- https://docs.mesa3d.org/install.html
+- https://docs.mesa3d.org/meson.html
+  - 👉 In particular, see _Cross-compilation and 32-bit builds_
+- https://gist.github.com/Venemo/a9483106565df3a83fc67a411191edbd?permalink_comment_id=3951924
+
 Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 
 1. Check out mesa from Git
+
+   https://gitlab.freedesktop.org/mesa/mesa
+
+   ⚠️ This was a huge pain because the `git clone` kept timing out. I had to do something like this:
+
+   ```
+   git clone --branch 24.0 --depth 1000 https://gitlab.freedesktop.org/mesa/mesa.git
+   cd mesa
+   git fetch --depth 1
+   git fetch --depth 1000
+   # and so on
+   git fetch origin refs/tags/mesa-23.3.3:refs/tags/mesa-23.3.3
+   ```
+
 1. Check out the tag, e.g. `mesa-23.3.3`
 1. Install dependencies, e.g.
 
@@ -135,7 +156,41 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 1. Compile
 
    ```
-   PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross --wipe builddir/ && meson compile -j 4 -C builddir/
+   meson compile -C builddir/ --clean; \
+       PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross --wipe builddir/; \
+       meson configure -Dprefix=$(pwd)/built -Dgallium-drivers=iris -Dvulkan-drivers= -Dbuildtype=release builddir/ && \
+       meson compile -j 6 -C builddir/
+   ```
+
+   👉 Adjust `meson compile -j 6` to the number of cores you wish to use, e.g. `-j 6` will use 6 cores
+
+   - `-Dprefix`: set a prefix to install to; it's too hard to use the compiled Mesa otherwise except for just very simple scenarios (e.g. with `meson devenv`)
+   - `-Dgallium-drivers=iris -Dvulkan-drivers=`: only build the iris driver to save time
+   - `-Dbuildtype=release`
+
+1. Install
+
+   ```
+   meson install -C builddir/
+   ```
+
+1. Sanity check
+
+   1. Download 32-bit glxinfo
+
+      I downloaded the mesa-utils i386 .deb from here and extracted glxinfo from it: https://launchpad.net/ubuntu/+source/mesa-demos/8.4.0-1build1/+build/15697776
+
+   1. Run this command and make sure you see the version you just built
+
+      ```
+      $ LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ~/Desktop/tmp-mesa/mesa-utils-i386/glxinfo | grep -i mesa
+      ```
+
+1. Test
+
+   ```
+   cd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
+   MESA_DEBUG=verbose LD_PRELOAD='/home/bmaupin/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
    ```
 
 If you get a build error, go up the logs and look for the actual error (it may not be at the end due to parallel compilation), e.g.
@@ -164,4 +219,19 @@ It may also help to uninstall the 64-bit version:
 
 ```
 sudo apt purge libxcb1-dev
+```
+
+#### Bisect
+
+```
+git checkout mesa-23.3.3
+# build
+# test
+git bisect start
+git bisect good
+git checkout mesa-24.4.0
+# rebuild
+# test
+git bisect bad
+# rebuild, test, repeat
 ```

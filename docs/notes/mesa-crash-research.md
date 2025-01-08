@@ -95,3 +95,73 @@ Thread 8 "CivBE" received signal SIGSEGV, Segmentation fault.
 #26 0xf762fff7 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
 #27 0xf76c75b8 in clone3 () at ../sysdeps/unix/sysv/linux/i386/clone3.S:111
 ```
+
+#### Build Mesa from source
+
+Build Mesa from source so we can do a Git bisect and submit an upstream issue:
+
+1. Check out mesa from Git
+1. Check out the tag, e.g. `mesa-23.3.3`
+1. Install dependencies, e.g.
+
+   ```
+   sudo apt install libdrm-dev:i386 zlib1g-dev:i386 libzstd-dev:i386 libxcb1-dev:i386 libx11-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxcb-glx0-dev:i386 libxcb-shm0-dev:i386 libx11-xcb-dev:i386 libxcb-keysyms1-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-present-dev:i386 libxxf86vm-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libwayland-dev:i386 libsensors-dev:i386 libva-dev:i386 libvdpau-dev:i386 libwayland-egl-backend-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libudev-dev:i386
+   ```
+
+1. Make cross compile file, e.g.
+
+   ```
+   echo "[binaries]
+   c = '/usr/bin/gcc'
+   cpp = '/usr/bin/g++'
+   ar = '/usr/bin/gcc-ar'
+   strip = '/usr/bin/strip'
+   pkg-config = '/usr/bin/pkgconf'
+   llvm-config = '/usr/bin/llvm-config-17'
+
+   [properties]
+   c_args = ['-m32']
+   c_link_args = ['-m32']
+   cpp_args = ['-m32']
+   cpp_link_args = ['-m32']
+
+   [host_machine]
+   system = 'linux'
+   cpu_family = 'x86'
+   cpu = 'i686'
+   endian = 'little'" > cross
+   ```
+
+1. Compile
+
+   ```
+   PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross --wipe builddir/ && meson compile -j 4 -C builddir/
+   ```
+
+If you get a build error, go up the logs and look for the actual error (it may not be at the end due to parallel compilation), e.g.
+
+```
+/usr/bin/ld: /usr/lib/x86_64-linux-gnu/libxcb.so: error adding symbols: file in wrong format
+collect2: error: ld returned 1 exit status
+```
+
+Then search for which package contains the file:
+
+```
+$ apt-file search /usr/lib/x86_64-linux-gnu/libxcb.so
+libxcb1: /usr/lib/x86_64-linux-gnu/libxcb.so.1
+libxcb1: /usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+libxcb1-dev: /usr/lib/x86_64-linux-gnu/libxcb.so
+```
+
+And install the 32-bit version, e.g.
+
+```
+sudo apt install libxcb1-dev:i386
+```
+
+It may also help to uninstall the 64-bit version:
+
+```
+sudo apt purge libxcb1-dev
+```

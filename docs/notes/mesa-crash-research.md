@@ -44,6 +44,52 @@ I don't know if a program that uses Vulkan would go through Mesa too.
 
 But Mesa does have a "Zink" driver that converts OpenGL calls to Vulkan and then passes those calls to the device's Vulkan API. But due to the extra translation this isn't perfect and can result in some graphics anomalies and a performance hit due to the extra translation.
 
+#### First steps
+
+1. First, I ran the game with gdb to get the backtrace (above), e.g.
+
+   ```
+   gdb CivBe
+   (gdb) start
+   (gdb) cont
+   (after crash)
+   (gdb) bt
+   ```
+
+1. Then I tried some high-level troubleshooting
+
+   - Check game Lua logs to make sure it's not a game issue
+   - Try X11 instead of Wayland
+   - Try with just one monitor
+   - Try full screen instead of windowed
+   - Try without mods
+   - Try different libtbb
+   - Try `taskset` (I'd read about this elsewhere and seems to fix issues with too many cores)
+
+1. Next I ran the game with `MESA_DEBUG=verbose` to look for errors:
+
+   ```
+   MESA_DEBUG=verbose LD_PRELOAD='/home/bmaupin/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
+   ```
+
+   And I saw:
+
+   ```
+   Mesa: error: GL_OUT_OF_MEMORY in glMapBufferRange(map failed)
+   ...
+   Segmentation fault
+   ```
+
+1. I tried a handful of workarounds:
+
+   - `GALLIUM_THREAD=0 ./CivBE` fixed the crash and the graphic corruption, but the graphics still flickered
+   - `LIBGL_ALWAYS_SOFTWARE=1 ./CivBE` switched to software rendering, which worked but the game was unbearably slow. I suppose this confirmed the crash was an issue with hardware rendering
+   - `MESA_LOADER_DRIVER_OVERRIDE=zink` fixed all of the issues I was having, but unfortunately it had some annoying graphical anomalies like flickering textures
+
+1. I confirmed that the game had no issues on a different computer; this computer was using the Crocus Mesa driver (it has older intel Graphics)
+
+1. I confirmed again that the game had no issues on another computer with Iris graphics running Ubuntu 22.04 (Mesa 23.2), so it seemed the issue must be with Mesa and more specifically with the Iris driver and with a newer version of Mesa between 23.2 and 24.0
+
 #### Mesa 24.2.8
 
 Upgrading to mesa 24.2.8 causes the game to crash before the match even starts or just after it starts. Backtrace:

@@ -92,7 +92,13 @@ But Mesa does have a "Zink" driver that converts OpenGL calls to Vulkan and then
 
 #### Mesa 24.2.8
 
-Upgrading to mesa 24.2.8 causes the game to crash before the match even starts or just after it starts. Backtrace:
+I wanted to see if upgrading Mesa corrected the issue in case it had already been discovered and fixed upstream.
+
+Unfortunately upgrading to mesa 24.2.8 caused the game to crash before the match even started or just after it started.
+
+Also I noticed that the `GALLIUM_THREAD=0` workaround didn't work any more.
+
+Backtrace:
 
 ```
 Thread 8 "CivBE" received signal SIGSEGV, Segmentation fault.
@@ -141,6 +147,33 @@ Thread 8 "CivBE" received signal SIGSEGV, Segmentation fault.
 #26 0xf762fff7 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
 #27 0xf76c75b8 in clone3 () at ../sysdeps/unix/sysv/linux/i386/clone3.S:111
 ```
+
+#### Downgrade Mesa
+
+Since upgrading Mesa didn't work, it seemed like whatever issue I was running into hasn't yet been identified and fixed. So next, I wanted to downgrade Mesa to indeed confirm it was the issue:
+
+1. Go here: https://launchpad.net/ubuntu/+source/mesa
+2. In the list in the main part of the page click _The Noble Numbat_
+3. Click on a version under _Releases in Ubuntu_
+4. Under _Builds_ click _amd64_
+5. Copy the URL for libegl-mesa0, e.g. https://launchpad.net/ubuntu/+source/mesa/23.3.0-1ubuntu1/+build/27036119/+files/libegl-mesa0_23.3.0-1ubuntu1_amd64.deb
+6. Get the list of packages we need and copy to a new file in vscode
+
+   ```
+   dpkg -l | egrep "mesa|gbm|axtracker" | awk '{print $2}' | egrep -v "mesa-utils|\-dev" | cut -d : -f 1 | sort -u
+   ```
+
+7. Prepend each package name with the first part of the URL, and append with the last
+8. Prepend `wget ` to each package name and copy to terminal to download
+9. Go back to step for, click i386, repeat (it will have a different build number)
+   - Or just get the build number for i386 and replace, and replace `amd64` with `i386`
+10. Install the packages
+
+    ```
+    sudo dpkg -i *.deb
+    ```
+
+11. Reboot and test
 
 #### Build Mesa from source
 

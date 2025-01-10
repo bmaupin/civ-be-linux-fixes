@@ -222,11 +222,26 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
         IPQoS=throughput
    ```
 
+1. (Optional) Figure out dependencies using Docker
+
+   To avoid installing a bunch of potentially unneeded packages, you can use Docker to determine exactly which packages need to be installed, e.g.
+
+   ```
+   docker run -v "$PWD:/build" --rm -it ubuntu:24.04
+   dpkg --add-architecture i386
+   apt update
+   DEBIAN_FRONTEND=noninteractive apt install -y bison flex g++-multilib gcc-multilib glslang-tools libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libllvmspirvlib17 llvm-17 llvm-17-dev libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 meson pkgconf python3-mako valgrind zlib1g-dev:i386
+   cd /build
+   # Run the build command below
+   ```
+
 1. Install dependencies, e.g.
 
    ```
-   sudo apt install libdrm-dev:i386 zlib1g-dev:i386 libzstd-dev:i386 libxcb1-dev:i386 libx11-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxcb-glx0-dev:i386 libxcb-shm0-dev:i386 libx11-xcb-dev:i386 libxcb-keysyms1-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-present-dev:i386 libxxf86vm-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libwayland-dev:i386 libsensors-dev:i386 libva-dev:i386 libvdpau-dev:i386 libwayland-egl-backend-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libudev-dev:i386
+   sudo apt install bison flex g++-multilib gcc-multilib glslang-tools libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libllvmspirvlib17 llvm-17 llvm-17-dev libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 meson pkgconf python3-mako valgrind zlib1g-dev:i386
    ```
+
+   ⚠️ Copy the output of `The following NEW packages will be installed:` so the packages can be cleaned up later
 
 1. Make cross compile file, e.g.
 

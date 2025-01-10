@@ -94,7 +94,7 @@ But Mesa does have a "Zink" driver that converts OpenGL calls to Vulkan and then
 1. Next I ran the game with `MESA_DEBUG=verbose` to look for errors:
 
    ```
-   MESA_DEBUG=verbose LD_PRELOAD='/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
+   MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so ./CivBE
    ```
 
    And I saw:
@@ -222,26 +222,9 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
         IPQoS=throughput
    ```
 
-1. (Optional) Figure out dependencies using Docker
+1. Check out a tag, e.g. `mesa-23.3.3`
 
-   To avoid installing a bunch of potentially unneeded packages, you can use Docker to determine exactly which packages need to be installed, e.g.
-
-   ```
-   docker run -v "$PWD:/build" --rm -it ubuntu:24.04
-   dpkg --add-architecture i386
-   apt update
-   DEBIAN_FRONTEND=noninteractive apt install -y bison flex g++-multilib gcc-multilib glslang-tools:i386 libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libllvmspirvlib17:i386 libllvmspirvlib-17-dev:i386 llvm-17 llvm-17-dev libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 meson pkgconf python3-mako spirv-tools:i386 valgrind zlib1g-dev:i386
-   cd /build
-   # Run the build command below
-   ```
-
-1. Install dependencies, e.g.
-
-   ```
-   sudo apt install bison flex g++-multilib gcc-multilib glslang-tools:i386 libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libllvmspirvlib17:i386 libllvmspirvlib-17-dev:i386 llvm-17 llvm-17-dev libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 meson pkgconf python3-mako spirv-tools:i386 valgrind zlib1g-dev:i386
-   ```
-
-   ⚠️ Copy the output of `The following NEW packages will be installed:` so the packages can be cleaned up later
+   ⚠️ This is only for testing a specific version. Don't use tags with git bisect
 
 1. Make cross compile file, e.g.
 
@@ -267,26 +250,46 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    endian = 'little'" > cross
    ```
 
-1. Check out a tag, e.g. `mesa-23.3.3`
+1. (Recommended) Build using Docker
 
-   ⚠️ This is only for testing a specific version. Don't use tags with git bisect
+   Figuring out the exact dependencies can be a pain and can leave a bunch of extra unneeded packages or even mess up your system. It's much easier to use Docker to do the build:
+
+   ```
+   $ docker run -v "$PWD:/build" --rm -it ubuntu:24.04
+
+   dpkg --add-architecture i386
+   apt update
+   DEBIAN_FRONTEND=noninteractive apt install -y bison flex g++-multilib gcc-multilib glslang-tools:i386 libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libllvmspirvlib17:i386 libllvmspirvlib-17-dev:i386 llvm-17 llvm-17-dev libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 meson pkgconf python3-mako spirv-tools:i386 valgrind zlib1g-dev:i386
+   cd /build
+   # Run the build command below
+   ```
+
+   If you don't wish to use Docker, run the `apt install` command (with `sudo`) above to install dependencies, and make a note of what's installed so you can clean it up later
 
 1. Compile
+
+   Still inside the container, do the build:
 
    ```
    rm -rf builddir/; \
        meson compile -C builddir/ --clean; \
-       PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross -Dprefix=$(pwd)/built -Dgallium-drivers=iris -Dvulkan-drivers= -Dbuildtype=release --wipe builddir/ && \
+       PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross -Dprefix=/usr -Dlibdir=/usr/lib/i386-linux-gnu -Dsysconfdir=/etc -Dgallium-drivers=iris -Dvulkan-drivers= -Dbuildtype=release --wipe builddir/ && \
        meson compile -j 6 -C builddir/
    ```
 
    👉 Adjust `meson compile -j 6` to the number of cores you wish to use, e.g. `-j 6` will use 6 cores
 
-   - `-Dprefix`: set a prefix to install to; it's too hard to use the compiled Mesa otherwise except for just very simple scenarios (e.g. with `meson devenv`)
    - `-Dgallium-drivers=iris -Dvulkan-drivers=`: only build the iris driver to save time
-   - `-Dbuildtype=release`
+   - `-Dbuildtype=release`: the default build type (debug) will have slower performance and create larger files
+   - `-Dprefix`, `-Dlibdir`, `-Dsysconfdir`: these use the same directory layout as Ubuntu; the built libraries will contain some hard-coded references to these paths for configuration files, e.g.
 
-   Ignore these errors:
+     ```
+     $ strings /usr/lib/x86_64-linux-gnu/libGLX_mesa.so.0 | egrep "/drirc"
+     /usr/share/drirc.d
+     /etc/drirc
+     ```
+
+   ⚠️ Ignore these errors:
 
    ```
    /usr/bin/ld: skipping incompatible /usr/lib/llvm-17/lib/libLLVM-17.so when searching for -lLLVM-17
@@ -294,18 +297,20 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 
 1. Install
 
+   Still inside the container, do the install:
+
    ```
    rm -rf built; \
-       meson install -C builddir/
+       DESTDIR=$(pwd)/built meson install -C builddir/
    ```
+
+   👉 At this point, you can do the remaining commands outside the container, but leave the container running so you don't have to reinstall everything if you need to do another build
 
 1. Sanity check
 
    1. Download 32-bit glxinfo
 
       I downloaded the mesa-utils i386 .deb from here and extracted glxinfo from it: https://launchpad.net/ubuntu/+source/mesa-demos/8.4.0-1build1/+build/15697776
-
-      ⚠️ For newer versions of Mesa, you may need to compile glxinfo; see [Build mesa demos from source](#build-mesa-demos-from-source)
 
    1. Run this command and make sure you see the version you just built
 
@@ -317,7 +322,7 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 
    ```
    cd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
-   MESA_DEBUG=verbose LD_PRELOAD='/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
+   MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/ ./CivBE
    ```
 
 If you get a build error, go up the logs and look for the actual error (it may not be at the end due to parallel compilation), e.g.
@@ -366,39 +371,6 @@ git checkout 69d1e29dc318bb0f1c395c9a9ba1a94056d4dbef
 git bisect bad
 # rebuild, test, repeat
 ```
-
-#### Build mesa demos from source
-
-1. Clone
-
-   ```
-   git clone git@gitlab.freedesktop.org:mesa/demos.git
-   ```
-
-1. Install dependencies
-
-   ```
-   sudo apt install libgl-dev:i386 libglu1-mesa-dev:i386 glslang-tools:i386 libxi-dev:i386
-   ```
-
-1. Configure and compile
-
-   ```
-   PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross -Dprefix=$(pwd)/built -Dbuildtype=release --wipe builddir/
-   meson compile -j 6 -C builddir/
-   ```
-
-1. Install
-
-   ```
-   meson install -C builddir/
-   ```
-
-1. Test
-
-   ```
-   LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib built/bin/glxinfo | grep -i mesa
-   ```
 
 ## Troubleshooting Mesa build
 

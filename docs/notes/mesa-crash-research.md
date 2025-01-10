@@ -28,13 +28,38 @@ warning: 480	../sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S: No such fil
 #12 0xf76c75b8 in clone3 () at ../sysdeps/unix/sysv/linux/i386/clone3.S:111
 ```
 
-## Troubleshooting
+Another backtrace (this is actually the one I saw originally, which is why it took me some time to suspect Mesa was the issue):
+
+```
+__memcpy_sse2_unaligned () at ../sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S:479
+warning: 479	../sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S: No such file or directory
+(gdb) bt
+#0  __memcpy_sse2_unaligned () at ../sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S:479
+#1  0x08b11cd0 in FStaticVector<TerrainCell*, 512u, true, 1002u, 259u>::GrowSize(unsigned int) ()
+#2  0x08b118fe in FStaticVector<TerrainCell*, 512u, true, 1002u, 259u>::push_back(TerrainCell* const&) ()
+#3  0x08b0f994 in Terrain::LaunchJobs(bool) ()
+#4  0x08b30d31 in TerrainSystem::LaunchJobs() ()
+#5  0x08a9e183 in GameViewState::RenderGame(unsigned short, unsigned short) ()
+#6  0x08a9ecc9 in GameViewState::Render(unsigned short, unsigned short, bool) ()
+#7  0x089fc4d0 in CivBEApp::RenderFrame(float) ()
+#8  0x089f7b96 in CivBEApp::OnIdle() ()
+#9  0x089f6859 in CivBEApp::Tick(AppHost::TickInfo const*) ()
+#10 0x0903b6e8 in AppHost::RunApp(int, char**, AppHost::Application*) ()
+#11 0x0903a8d0 in AppHost::RunApp(char*, AppHost::Application*) ()
+#12 0x089f0ff8 in WinMain ()
+#13 0x08987301 in ?? ()
+#14 0x089bfcb5 in ThreadHANDLE::ThreadProc(void*) ()
+#15 0xf762fff7 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:447
+#16 0xf76c75b8 in clone3 () at ../sysdeps/unix/sysv/linux/i386/clone3.S:111
+```
+
+## Troubleshooting the crash
 
 #### Overview
 
-I don't remember why, but at some point I suspected Mesa; if I knew more I would've suspected it right away from the backtrace as "Iris" is the Intel graphics driver for Mesa.
+After trying a bunch of different things to troubleshoot the issue, at some point I started troubleshooting Mesa and I found that the crash started occurring with Mesa 24.0.
 
-Ubuntu 22.04 (which I used previously) uses Mesa 23.2.1 I think. But Ubuntu 24.04 uses Mesa 24.0.
+The game worked fine with Ubuntu 22.04 (which has Mesa 23.2) but started crashing after upgrading to Ubuntu 24.04, which uses Mesa 24.0
 
 #### More on Mesa
 
@@ -69,7 +94,7 @@ But Mesa does have a "Zink" driver that converts OpenGL calls to Vulkan and then
 1. Next I ran the game with `MESA_DEBUG=verbose` to look for errors:
 
    ```
-   MESA_DEBUG=verbose LD_PRELOAD='/home/bmaupin/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
+   MESA_DEBUG=verbose LD_PRELOAD='/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
    ```
 
    And I saw:
@@ -246,10 +271,17 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    - `-Dgallium-drivers=iris -Dvulkan-drivers=`: only build the iris driver to save time
    - `-Dbuildtype=release`
 
+   Ignore these errors:
+
+   ```
+   /usr/bin/ld: skipping incompatible /usr/lib/llvm-17/lib/libLLVM-17.so when searching for -lLLVM-17
+   ```
+
 1. Install
 
    ```
-   meson install -C builddir/
+   rm -rf built; \
+       meson install -C builddir/
    ```
 
 1. Sanity check
@@ -257,6 +289,8 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    1. Download 32-bit glxinfo
 
       I downloaded the mesa-utils i386 .deb from here and extracted glxinfo from it: https://launchpad.net/ubuntu/+source/mesa-demos/8.4.0-1build1/+build/15697776
+
+      ⚠️ For newer versions of Mesa, you may need to compile glxinfo; see [Build mesa demos from source](#build-mesa-demos-from-source)
 
    1. Run this command and make sure you see the version you just built
 
@@ -268,7 +302,7 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 
    ```
    cd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
-   MESA_DEBUG=verbose LD_PRELOAD='/home/bmaupin/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
+   MESA_DEBUG=verbose LD_PRELOAD='/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so' LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ./CivBE
    ```
 
 If you get a build error, go up the logs and look for the actual error (it may not be at the end due to parallel compilation), e.g.
@@ -317,3 +351,50 @@ git checkout 69d1e29dc318bb0f1c395c9a9ba1a94056d4dbef
 git bisect bad
 # rebuild, test, repeat
 ```
+
+#### Build mesa demos from source
+
+1. Clone
+
+   ```
+   git clone git@gitlab.freedesktop.org:mesa/demos.git
+   ```
+
+1. Install dependencies
+
+   ```
+   sudo apt install libgl-dev:i386 libglu1-mesa-dev:i386 glslang-tools:i386 libxi-dev:i386
+   ```
+
+1. Configure and compile
+
+   ```
+   PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross -Dprefix=$(pwd)/built -Dbuildtype=release --wipe builddir/
+   meson compile -j 6 -C builddir/
+   ```
+
+1. Install
+
+   ```
+   meson install -C builddir/
+   ```
+
+1. Test
+
+   ```
+   LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib built/bin/glxinfo | grep -i mesa
+   ```
+
+## Troubleshooting Mesa build
+
+### Build errors
+
+#### `/usr/bin/ld: skipping incompatible /usr/lib/llvm-17/lib/libLLVM-17.so when searching for -lLLVM-17`
+
+This can be ignored
+
+### Runtime errors
+
+#### `did not find extension DRI_IMAGE_DRIVER version 1`
+
+This was happening because I wasn't deleting the `built/` directory in between builds so there was a conflict between the different Mesa versions

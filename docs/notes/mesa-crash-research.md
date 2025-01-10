@@ -190,18 +190,13 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 
    https://gitlab.freedesktop.org/mesa/mesa
 
-   ⚠️ This was a huge pain because the `git clone` kept timing out. I had to do something like this:
+   ⚠️ This was a huge pain because the `git clone` kept timing out. I tried a bunch of stuff but in the end this is what worked (as per https://stackoverflow.com/a/57082400/399105):
 
    ```
-   git clone --branch 24.0 --depth 1000 https://gitlab.freedesktop.org/mesa/mesa.git
-   cd mesa
-   git fetch --depth 1
-   git fetch --depth 1000
-   # and so on
-   git fetch origin refs/tags/mesa-23.3.3:refs/tags/mesa-23.3.3
+   Host gitlab.freedesktop.org
+        IPQoS=throughput
    ```
 
-1. Check out the tag, e.g. `mesa-23.3.3`
 1. Install dependencies, e.g.
 
    ```
@@ -232,12 +227,16 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    endian = 'little'" > cross
    ```
 
+1. Check out a tag, e.g. `mesa-23.3.3`
+
+   ⚠️ This is only for testing a specific version. Don't use tags with git bisect
+
 1. Compile
 
    ```
-   meson compile -C builddir/ --clean; \
-       PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross --wipe builddir/; \
-       meson configure -Dprefix=$(pwd)/built -Dgallium-drivers=iris -Dvulkan-drivers= -Dbuildtype=release builddir/ && \
+   rm -rf builddir/; \
+       meson compile -C builddir/ --clean; \
+       PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross -Dprefix=$(pwd)/built -Dgallium-drivers=iris -Dvulkan-drivers= -Dbuildtype=release --wipe builddir/ && \
        meson compile -j 6 -C builddir/
    ```
 
@@ -302,13 +301,17 @@ sudo apt purge libxcb1-dev
 
 #### Bisect
 
+⚠️ Don't bisect with a tag, e.g. `git checkout mesa-23.3.3`
+
 ```
-git checkout mesa-23.3.3
+git checkout main
+git bisect start
+git log -p VERSION
+git checkout fac4f526acfa300139c37e7270dd8ec84b31ce0f
 # build
 # test
-git bisect start
 git bisect good
-git checkout mesa-24.4.0
+git checkout 69d1e29dc318bb0f1c395c9a9ba1a94056d4dbef
 # rebuild
 # test
 git bisect bad

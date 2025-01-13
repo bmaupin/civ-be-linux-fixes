@@ -1,5 +1,9 @@
 # Mesa crash research
 
+## Summary
+
+Beyond Earth will crash when using Intel Iris graphics and Mesa 24.0 or later. A bug has been filed upstream with Mesa: https://gitlab.freedesktop.org/mesa/mesa/-/issues/12438
+
 ## Details
 
 After upgrading to Ubuntu 24.04, the game crashes even without mods. It can crash when opening the Steam overlay. Most of the time the match will start fine, but then in the match the graphics (specifically text) will not show or become corrupt, and flicker back and forth between not showing/corrupt or just fine. And the game will eventually crash within a few minutes.
@@ -234,7 +238,7 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    cpp = '/usr/bin/g++'
    ar = '/usr/bin/gcc-ar'
    strip = '/usr/bin/strip'
-   pkg-config = '/usr/bin/pkgconf'
+   pkg-config = '/usr/bin/pkg-config'
    llvm-config = '/usr/bin/llvm-config-17'
 
    [properties]
@@ -385,3 +389,45 @@ This can be ignored
 #### `did not find extension DRI_IMAGE_DRIVER version 1`
 
 This was happening because I wasn't deleting the `built/` directory in between builds so there was a conflict between the different Mesa versions
+
+## Package Mesa
+
+1. Run Beyond Earth with gdb
+
+   ```
+   MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/ gdb CivBE
+   (gdb) start
+   (gdb) cont
+   ```
+
+1. Start a match, and then in gdb type Ctrl+C
+
+1. Enter this into gdb to list shared libraries in use:
+
+   ```
+   info sharedlibrary
+   ```
+
+1. Make note of which ones are used and copy them directly into the game directory, e.g.
+
+   ```
+   cp /home/$HOME/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libgallium-25.0.0-devel.so .
+   cp /home/$HOME/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libglapi.so.0.0.0 libglapi.so.0
+   cp /home/$HOME/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libGLX_mesa.so.0.0.0 libGLX_mesa.so.0
+   ```
+
+1. Test again to make sure everything works, e.g.
+
+   ```
+   MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so ./CivBE
+   ```
+
+1. Strip the libraries
+
+   ⓘ You can also add `-Dstrip=true` to the meson build command
+
+   ```
+   libgallium-25.0.0-devel.so
+   libglapi.so.0
+   libGLX_mesa.so.0
+   ```

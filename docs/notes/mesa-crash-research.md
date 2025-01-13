@@ -259,7 +259,7 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
 
    dpkg --add-architecture i386
    apt update
-   DEBIAN_FRONTEND=noninteractive apt install -y bison flex g++-multilib gcc-multilib glslang-tools:i386 libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libllvmspirvlib17:i386 libllvmspirvlib-17-dev:i386 llvm-17 llvm-17-dev libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 meson pkgconf python3-mako spirv-tools:i386 valgrind zlib1g-dev:i386
+   DEBIAN_FRONTEND=noninteractive apt install -y bison flex g++-multilib gcc-multilib glslang-tools:i386 libclang-17-dev:i386 libclc-17 libclc-17-dev libdrm-dev:i386 libelf-dev:i386 libexpat1-dev:i386 libglvnd-core-dev libllvmspirvlib-17-dev:i386 libllvmspirvlib17:i386 libsensors-dev:i386 libudev-dev:i386 libwayland-bin libwayland-dev:i386 libwayland-egl-backend-dev:i386 libx11-dev:i386 libx11-xcb-dev:i386 libxcb-dri2-0-dev:i386 libxcb-dri3-dev:i386 libxcb-glx0-dev:i386 libxcb-keysyms1-dev:i386 libxcb-present-dev:i386 libxcb-shm0-dev:i386 libxext-dev:i386 libxfixes-dev:i386 libxrandr-dev:i386 libxshmfence-dev:i386 libxxf86vm-dev:i386 libzstd-dev:i386 llvm-17 llvm-17-dev meson pkgconf python3-mako spirv-tools:i386 valgrind zlib1g-dev:i386
    cd /build
    # Run the build command below
    ```

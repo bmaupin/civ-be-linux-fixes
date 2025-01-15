@@ -431,3 +431,36 @@ This was happening because I wasn't deleting the `built/` directory in between b
    libglapi.so.0
    libGLX_mesa.so.0
    ```
+
+## Apitrace
+
+#### Build apitrace from source
+
+See https://github.com/apitrace/apitrace/blob/master/docs/INSTALL.markdown
+
+```
+sudo apt install libx11-dev:i386
+git clone https://github.com/apitrace/apitrace.git
+git submodule update --init --recursive
+cd apitrace
+cmake \
+    -S. -Bbuild32 \
+    -DCMAKE_C_FLAGS=-m32 \
+    -DCMAKE_CXX_FLAGS=-m32 \
+    -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib/i386-linux-gnu/ \
+    -DENABLE_GUI=FALSE
+make -C build32 glxtrace
+```
+
+Cleanup:
+
+```
+sudo apt purge libx11-dev:i386
+sudo apt autoremove --purge
+```
+
+#### Do apitrace
+
+```
+MESA_DEBUG=verbose LD_PRELOAD="/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so" LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib:/home/$USER/Desktop/tmp-mesa/apitrace/build32/wrappers/glxtrace.so apitrace trace --api gl ./CivBE
+```

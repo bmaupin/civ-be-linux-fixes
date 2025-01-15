@@ -103,9 +103,9 @@ if lspci | grep VGA | grep -q Iris; then
     # Check to see if system is using Mesa 24 or newer
     if [[ $(glxinfo | grep "OpenGL version" | rev | awk '{print $1}' | rev | cut -d . -f 1) -ge 24 ]]; then
         echo "Applying Mesa Iris crash workaround"
-        curl -L https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz | tar -xJ -C "${game_directory}"
+        curl -L -s https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz | tar -xJ -C "${game_directory}"
         offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" "${game_directory}/libGL.so.1" | cut -d : -f 1)
-        echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc
+        echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc status=none
     fi
 fi
 

@@ -70,6 +70,10 @@ The game can crash just before a match starts, or even 20 turns in. This can be 
 
    Source: [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481)
 
+1. If you're using Intel graphics and the game is still crashing
+
+   See [docs/iris-workaround.md](docs/iris-workaround.md)
+
 ### Game crashes when using mods
 
 The Linux version of Beyond Earth will always crash just before starting if any mods are used. To fix this:

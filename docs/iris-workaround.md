@@ -20,15 +20,14 @@ If you're using Intel graphics and the game is crashing:
 
 1. If you have Iris and you're using Mesa 24.0 or later, download the workaround
 
-   TODO: add link
+   https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz
 
 1. Extract the files and copy them to the game directory
 
 1. Run this command inside the game directory:
 
    ```
-   offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" libGL.so.1 | cut -d : -f 1)
-   echo -ne "$(pwd)\0" | dd of=libGL.so.1 bs=1 seek=${offset} conv=notrunc
+   echo -ne "$(pwd)\0" | dd of=libGL.so.1 bs=1 seek=350508 conv=notrunc
    ```
 
    ⓘ This replaces the dummy dri search path inside libGL with the game directory so it will find the iris driver

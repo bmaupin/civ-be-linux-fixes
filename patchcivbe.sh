@@ -14,7 +14,7 @@ if [[ ! -f "${game_directory}/CivBE" ]]; then
     exit 1
 fi
 
-echo "Copying libtbb.so.2 (fixes crashes after game starts)"
+echo "Copying libtbb.so.2 (fixes a crash after game starts)"
 cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 "${game_directory}"
 
 echo "Copying libopenal.so.1 (prevents issues with audio)"
@@ -97,3 +97,8 @@ sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/ex
 sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/tiny_islands.lua"
 sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/maps/ice_age.lua"
 sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/ice_age.lua"
+
+# Check to see if the system has more than 8 cores
+if [ "$(nproc --all)" -gt 8 ]; then
+    echo "WARNING: System has more than 8 cores. See README for details on how to fix potential crashes."
+fi

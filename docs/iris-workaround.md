@@ -1,5 +1,7 @@
 # Intel Iris crash workaround
 
+ⓘ This workaround is already included in the all-in-one patch script in the [readme](../README.md)
+
 If you're using Intel graphics and the game is crashing:
 
 1. First, make sure you've read the [readme](../README.md) and applied any fixes there

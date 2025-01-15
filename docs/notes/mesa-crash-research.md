@@ -293,6 +293,14 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
      /etc/drirc
      ```
 
+     - libGL/libGLX_mesa has references to:
+       - `libdir`/dri
+       - `prefix`/share/drirc.d
+       - `sysconfdir`/drirc
+     - iris/libgalium has references to:
+       - `prefix`/share/drirc.d
+       - `sysconfdir`/drirc
+
    ⚠️ Ignore these errors:
 
    ```
@@ -319,8 +327,10 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    1. Run this command and make sure you see the version you just built
 
       ```
-      $ LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib ~/Desktop/tmp-mesa/mesa-utils-i386/glxinfo | grep -i mesa
+      $ LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/ ~/Desktop/tmp-mesa/mesa-utils-i386/glxinfo | grep -i mesa
       ```
+
+      👉 For Mesa 23, you'll also need `LIBGL_DRIVERS_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/dri`
 
 1. Test
 
@@ -328,6 +338,8 @@ Build Mesa from source so we can do a Git bisect and submit an upstream issue:
    cd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
    MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/ ./CivBE
    ```
+
+   👉 For Mesa 23, you'll also need `LIBGL_DRIVERS_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/dri`
 
 If you get a build error, go up the logs and look for the actual error (it may not be at the end due to parallel compilation), e.g.
 
@@ -392,6 +404,75 @@ This was happening because I wasn't deleting the `built/` directory in between b
 
 ## Package Mesa
 
+#### Mesa 23
+
+ⓘ Mesa 23 seems to have a hard-coded dri path inside libGL which will search for the iris driver. This path can be worked around at runtime using `LIBGL_DRIVERS_PATH`. As an alternative, we'll build Mesa with a dummy dri path and then replace the path in LibGL with the path to the game directory so we don't have to provide `LIBGL_DRIVERS_PATH`.
+
+1. Rebuild Mesa
+
+   ```
+   rm -rf builddir/; \
+       meson compile -C builddir/ --clean; \
+       PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig:$PKG_CONFIG_PATH meson setup --cross-file cross -Dprefix=/usr -Dlibdir=/usr/lib/i386-linux-gnu -Ddri-drivers-path=/AReallyLongDirectoryNameToReplace12345678901234567890123456789012345678901234567890123456789012345678901234567890 -Dsysconfdir=/etc -Dgallium-drivers=iris -Dvulkan-drivers= -Dbuildtype=release --wipe builddir/ && \
+       meson compile -j 6 -C builddir/
+   ```
+
+1. Install Mesa
+
+   ```
+   rm -rf built; \
+       DESTDIR=$(pwd)/built meson install -C builddir/
+   ```
+
+1. Rename the dri directory inside built
+
+   ```
+   mv built/AReallyLongDirectoryNameToReplace12345678901234567890123456789012345678901234567890123456789012345678901234567890/ built/usr/lib/i386-linux-gnu/dri
+   ```
+
+1. Figure out which files are needed
+
+   ```
+   $ LIBGL_DRIVERS_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/dri/ LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/ strace -e openat,open -f ~/Desktop/tmp-mesa/mesa-utils-i386/glxinfo 2>&1 | grep tmp-mesa | egrep -v "No such file"
+   openat(AT_FDCWD, "/home/username/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libGL.so.1", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+   openat(AT_FDCWD, "/home/username/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libglapi.so.0", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 3
+   openat(AT_FDCWD, "/home/username/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/dri//iris_dri.so", O_RDONLY|O_LARGEFILE|O_CLOEXEC) = 5
+   ```
+
+1. Copy the files to the game directory
+
+   ```
+   cd ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth
+   cp /home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libGL.so.1 .
+   cp /home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/libglapi.so.0 .
+   cp /home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu/dri/iris_dri.so .
+   ```
+
+1. Replace the dummy dri lookup path with the game directory
+
+   Run this command inside the game directory:
+
+   ```
+   offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" libGL.so.1 | cut -d : -f 1)
+   echo -ne "$(pwd)\0" | dd of=libGL.so.1 bs=1 seek=${offset} conv=notrunc
+   ```
+
+1. Test
+
+   ```
+   MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so ./CivBE
+   ```
+
+1. Strip the libraries
+
+   ⓘ You can also add `-Dstrip=true` to the meson build command
+
+   ```
+   strip iris_dri.so libGL.so.1 libglapi.so.0
+   ```
+
+#### Mesa 24+
+
 1. Run Beyond Earth with gdb
 
    ```
@@ -427,9 +508,7 @@ This was happening because I wasn't deleting the `built/` directory in between b
    ⓘ You can also add `-Dstrip=true` to the meson build command
 
    ```
-   libgallium-25.0.0-devel.so
-   libglapi.so.0
-   libGLX_mesa.so.0
+   strip libgallium-25.0.0-devel.so libglapi.so.0 libGLX_mesa.so.0
    ```
 
 ## Apitrace
@@ -462,5 +541,5 @@ sudo apt autoremove --purge
 #### Do apitrace
 
 ```
-MESA_DEBUG=verbose LD_PRELOAD="/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so" LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib:/home/$USER/Desktop/tmp-mesa/apitrace/build32/wrappers/glxtrace.so apitrace trace --api gl ./CivBE
+MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu:/home/$USER/Desktop/tmp-mesa/apitrace/build32/wrappers/glxtrace.so apitrace trace --api gl ./CivBE
 ```

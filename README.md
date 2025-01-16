@@ -70,13 +70,11 @@ The game can crash just before a match starts, or even 20 turns in. This can be 
 
    Source: [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481)
 
-1. If you're using Intel graphics and the game is still crashing
-
-   See [docs/iris-workaround.md](docs/iris-workaround.md)
+1. If you're using Intel graphics and the game is still crashing, see [docs/iris-workaround.md](docs/iris-workaround.md)
 
 ### Game crashes when using mods
 
-The Linux version of Beyond Earth will always crash just before starting if any mods are used. To fix this:
+The Linux version of Beyond Earth will crash if any mods are used. To fix this:
 
 1. Download [CivBE.patch](CivBE.patch)
 1. Apply the patch
@@ -95,9 +93,7 @@ For example, if you have Rising Tide enabled and you try to load a saved game th
 
 ### Terrain appears above cities and units, no water or hills are visible
 
-In addition, this bug seems to prevent the game from exiting normally. The game will continue running after it's exited and you must press _Stop_ in Steam to stop it.
-
-If this happens, run this fix:
+Run this in a terminal:
 
 ```
 sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "/home/${USER}/.steam/steam/steamapps/common/Sid Meier's Civilization Beyond Earth/steamassets/assets/ui/ingame/worldview/diplocorner.lua"
@@ -119,7 +115,7 @@ TODO: What is the fix for this? Possible options:
 
 ### Sound issues
 
-This might fix sound issues, such as the game music will completely stop after a certain time:
+This might fix sound issues, such as the game music stopping after a certain time:
 
 ```
 cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 ~/.steam/steam/steamapps/common/Sid\ Meier\'s\ Civilization\ Beyond\ Earth/

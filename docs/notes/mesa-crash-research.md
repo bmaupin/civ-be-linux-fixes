@@ -524,10 +524,12 @@ git submodule update --init --recursive
 cd apitrace
 cmake \
     -S. -Bbuild32 \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_C_FLAGS=-m32 \
     -DCMAKE_CXX_FLAGS=-m32 \
     -DCMAKE_SYSTEM_LIBRARY_PATH=/usr/lib/i386-linux-gnu/ \
     -DENABLE_GUI=FALSE
+make -C build32
 make -C build32 glxtrace
 ```
 
@@ -541,5 +543,9 @@ sudo apt autoremove --purge
 #### Do apitrace
 
 ```
-MESA_DEBUG=verbose LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/usr/lib/i386-linux-gnu:/home/$USER/Desktop/tmp-mesa/apitrace/build32/wrappers/glxtrace.so apitrace trace --api gl ./CivBE
+LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib /home/$USER/Desktop/tmp-mesa/apitrace/build32/apitrace trace ./CivBE
 ```
+
+⚠️ Don't use `LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so` as it seems to break apitrace
+
+👉 You may need to try a few times before the crash will happen. For whatever reason, the same exact thing that would consistently cause a crash without apitrace wasn't working, but I tried a handful of times (exiting the game between each time) and finally it worked.

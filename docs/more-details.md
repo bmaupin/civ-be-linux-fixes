@@ -64,6 +64,8 @@ The Lua error in question seems to be a reference to a "culture overview UI" but
 
 The bug also seems to exist in the non-Linux versions of the game but I'm not sure if they exhibit the same behaviour.
 
+In addition, this bug seems to prevent the game from exiting normally. The game will continue running after it's exited and you must press _Stop_ in Steam to stop it.
+
 ## Sound issues
 
 As with the libtbb.so.2 fix above, this is a required library that isn't included in the game, and it's possible there could be a library compatibility issue with a system library.

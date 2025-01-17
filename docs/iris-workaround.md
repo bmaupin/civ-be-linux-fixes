@@ -32,6 +32,22 @@ If you're using Intel graphics and the game is crashing:
    echo -ne "$(pwd)\0" | dd of=libGL.so.1 bs=1 seek=350508 conv=notrunc
    ```
 
-   ⓘ This replaces the dummy dri search path inside libGL with the game directory so it will find the iris driver
+   ⓘ This replaces the dummy dri search path inside libGL with the game directory so it will find the iris driver. Unfortunately this will only work when the game is run from the command line because the Steam Linux runtime sets `LIBGL_DRIVERS_PATH` which overrides this path.
+
+1. Set Steam Compatibility
+
+   1. Open Steam and go to _Library_
+
+   1. Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
+
+   1. Go to _Compatibility_ and check _Force the use of a specific Steam Play compatibility tool_
+
+   1. Select _Legacy runtime 1.0_
+
+      **Alternatively**, you can go to _General_ under _Launch Options_, add this:
+
+      ```
+      LIBGL_DRIVERS_PATH="$(pwd)" %command%
+      ```
 
 For more info, see [docs/notes/mesa-crash-research.md](docs/notes/mesa-crash-research.md)

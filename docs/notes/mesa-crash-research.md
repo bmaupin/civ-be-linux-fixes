@@ -549,3 +549,62 @@ LD_LIBRARY_PATH=/home/$USER/Desktop/tmp-mesa/mesa/built/lib /home/$USER/Desktop/
 ⚠️ Don't use `LD_PRELOAD=/home/$USER/.local/share/Steam/ubuntu12_32/gameoverlayrenderer.so` as it seems to break apitrace
 
 👉 You may need to try a few times before the crash will happen. For whatever reason, the same exact thing that would consistently cause a crash without apitrace wasn't working, but I tried a handful of times (exiting the game between each time) and finally it worked.
+
+## Troubleshooting issues using custom Iris with Steam
+
+Running the game with a custom libGL and iris_dri from the command line works fine, but in Steam it just shows an empty dialogue box
+
+#### Troubleshooting
+
+1. Run Steam from the command line and launch the game again
+
+   This error is shown in the terminal
+
+   ```
+   DRI driver not from this Mesa build ('24.0.9-0ubuntu0.3' vs '23.3.3')
+   ```
+
+   Doing some more testing, this means it's using our custom libGL (23.3.3) but the system iris_dri (24.0.9)
+
+1. Add this to the game's launch options for more output from the Steam runtime:
+
+   ```
+   STEAM_LINUX_RUNTIME_VERBOSE=1 %command%
+   ```
+
+1. Test with _Legacy runtime 1.0_ in the game's _Compatibility_ options in Steam
+
+   This works! Why?
+
+   The original Steam runtime ran the game in linux but with some tweaks to LD_LIBRARY_PATH so that the game would use the Steam runtime libraries. Newer versions of the Steam runtime seem to run the game in a container for better isolation.
+
+1. Troubleshoot with steam-runtime-launch-options
+
+   Set the game's launch options to this to allow various tweaks to Steam runtime:
+
+   (https://gitlab.steamos.cloud/steamrt/steam-runtime-tools/-/blob/main/docs/slr-for-game-developers.md#using-steam-runtime-launch-options)
+
+   ```
+   steam-runtime-launch-options -- %command%
+   ```
+
+   This will give you the exact command that Steam is running!
+
+1. Copy and paste the commend from the previous step into a terminal and try it
+
+1. Run with steam-runtime-launch-options again
+
+   Select _Interactive shell_ > _Instead of running the command_ > _Run_
+
+   (This is the same as setting this in the game's launch options: PRESSURE_VESSEL_SHELL=instead %command%)
+
+1. In the terminal, you can do more troubleshooting, e.g.
+
+   ```
+   echo $LD_LIBRARY_PATH
+   echo $LIBGL_DRIVERS_PATH
+   ```
+
+   You will see that the runtime has overridden `LIBGL_DRIVERS_PATH` and so it is getting iris_dri.so from /usr/lib/pressure-vessel/overrides/lib/i386-linux-gnu/dri/iris_dri.so
+
+   - This is a symlink to /run/host/usr/lib/i386-linux-gnu/dri/crocus_dri.so 🤔

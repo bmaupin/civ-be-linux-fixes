@@ -106,6 +106,8 @@ if lspci | grep VGA | grep -q Iris; then
         curl -L -s https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz | tar -xJ -C "${game_directory}"
         offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" "${game_directory}/libGL.so.1" | cut -d : -f 1)
         echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc status=none
+
+        echo "    NOTE: In order for this to work, you will need to set the game's Compatibility to \"Legacy runtime 1.0\""
     fi
 fi
 

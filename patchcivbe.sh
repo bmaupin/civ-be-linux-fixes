@@ -107,7 +107,20 @@ if lspci | grep VGA | grep -q Iris; then
         offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" "${game_directory}/libGL.so.1" | cut -d : -f 1)
         echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc status=none
 
-        echo "    NOTE: In order for this to work, you will need to set the game's Compatibility to \"Legacy runtime 1.0\""
+        # See if libLLVM-17.so.1 is installed in the library path
+        libllvm17_path="$(ldconfig -p | grep libLLVM-17.so.1 | awk '{print $4}')"
+        # If it is not installed
+        if [ -z "${libllvm17_path}" ]; then
+            # If this is Ubuntu, install it
+            if grep -q "DISTRIB_ID=Ubuntu" /etc/*release; then
+                echo "    Installing 32-bit libLLVM-17.so.1"
+                sudo apt-get install -y libllvm17t64:i386 > /dev/null
+            else
+                echo "    👉 NOTE: 32-bit libLLVM-17.so.1 not found; you may need to install it"
+            fi
+        fi
+
+        echo "    👉 NOTE: In order for this to work, you will need to set the game's Compatibility to \"Legacy runtime 1.0\""
     fi
 fi
 

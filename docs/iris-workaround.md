@@ -50,4 +50,4 @@ If you're using Intel graphics and the game is crashing:
       LIBGL_DRIVERS_PATH="$(pwd)" %command%
       ```
 
-For more info, see [docs/notes/mesa-crash-research.md](docs/notes/mesa-crash-research.md)
+For more info, see [notes/mesa-crash-research.md](notes/mesa-crash-research.md)

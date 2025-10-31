@@ -98,6 +98,10 @@ sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/ex
 sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/maps/ice_age.lua"
 sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/ice_age.lua"
 
+echo "Skip mods EULA dialogue"
+sed -i 's/--\s*NavigateForward();/NavigateForward();/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i 's/--\s*NavigateBack();/NavigateBack();/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+
 # Check to see if system is using Intel Iris graphics
 if lspci | grep VGA | grep -q Iris; then
     # Check to see if system is using Mesa 24 or newer

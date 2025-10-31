@@ -6,7 +6,7 @@ Various fixes and workarounds for Sid Meier's Civilization: Beyond Earth on Linu
 
 ## All-in-one patch script
 
-👉 For a quick and easy fix for most common problems, run this script. Or see below for specific fixes or general troubleshooting.
+👉 This includes fixes for most of the issues below as well as quality-of-life changes like enabling achievements with mods, disabling intro videos and EULA dialogues, etc.
 
 1. Download the patch script: [patchcivbe.sh](patchcivbe.sh)
 
@@ -37,6 +37,8 @@ To uninstall the all-in-one patch script or other fixes below:
 1. _Installed Files_ > _Verify integrity of game files_
 
 ## Individual bugs and fixes
+
+ⓘ Most of these fixes are included in the [all-in-one patch script](#all-in-one-patch-script)
 
 ### Game crashes without mods
 

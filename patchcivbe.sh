@@ -98,6 +98,10 @@ sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/ex
 sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/maps/ice_age.lua"
 sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/ice_age.lua"
 
+# https://www.pcgamingwiki.com/wiki/Sid_Meier%27s_Civilization:_Beyond_Earth#Skip_legal_screen
+echo "Skip legal screen"
+sed -i 's/        UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/        -- UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/' "${game_directory}/steamassets/assets/ui/frontend/frontend.lua"
+
 echo "Skip mods EULA dialogue"
 sed -i 's/--\s*NavigateForward();/NavigateForward();/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
 sed -i 's/--\s*NavigateBack();/NavigateBack();/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"

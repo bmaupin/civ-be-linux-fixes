@@ -103,8 +103,13 @@ echo "Skip legal screen"
 sed -i 's/        UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/        -- UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/' "${game_directory}/steamassets/assets/ui/frontend/frontend.lua"
 
 echo "Skip mods EULA dialogue"
-sed -i 's/--\s*NavigateForward();/NavigateForward();/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i 's/--\s*NavigateBack();/NavigateBack();/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i 's/^g_HasAcceptedEULA = false;/g_HasAcceptedEULA = true;/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i '/--if not isHide and g_HasAcceptedEULA then/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i '/--\s*NavigateForward();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i '/--if(not isHide and g_QueueEulaToHide) then/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i '/--\s*NavigateBack();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
 
 # Check to see if system is using Intel Iris graphics
 if lspci | grep VGA | grep -q Iris; then

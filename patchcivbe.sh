@@ -120,35 +120,22 @@ EOF
     sed -i '/--\s*NavigateBack();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
     sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
 
-    # Check to see if system is using Intel Iris graphics
-    if lspci | grep VGA | grep -q Iris; then
-        # Check to see if system is using Mesa 24 or newer
-        if [[ $(glxinfo | grep "OpenGL version" | rev | awk '{print $1}' | rev | cut -d . -f 1) -ge 24 ]]; then
-            echo "Applying Mesa Iris crash workaround"
-            curl -L -s https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz | tar -xJ -C "${game_directory}"
-            offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" "${game_directory}/libGL.so.1" | cut -d : -f 1)
-            echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc status=none
-
-            # See if libLLVM-17.so.1 is installed in the library path
-            libllvm17_path="$(ldconfig -p | grep libLLVM-17.so.1 | awk '{print $4}')"
-            # If it is not installed
-            if [ -z "${libllvm17_path}" ]; then
-                # If this is Ubuntu, install it
-                if grep -q "DISTRIB_ID=Ubuntu" /etc/*release; then
-                    echo "    Installing 32-bit libLLVM-17.so.1"
-                    sudo apt-get install -y libllvm17t64:i386 > /dev/null
-                else
-                    echo "    👉 NOTE: 32-bit libLLVM-17.so.1 not found; you may need to install it"
-                fi
-            fi
-
-            echo "    👉 NOTE: In order for this to work, you will need to set the game's Compatibility to \"Legacy runtime 1.0\""
+    # Check to see if system is using Mesa 24 or newer
+    if [[ $(glxinfo 2>/dev/null | grep -o "Mesa [0-9]\+\.[0-9]\+" | head -n 1 | awk '{print $2}' | cut -d . -f 1) -ge 24 ]]; then
+        # Check to see if system is using Intel Iris graphics
+        if lspci | grep VGA | grep -q Iris; then
+            echo "⚠️ Intel Iris graphics detected with Mesa >= 24; crashes will occur!"
+            echo "    To fix, set the game Launch Options in the Steam properties to:"
+            echo "    MESA_LOADER_DRIVER_OVERRIDE=zink %command%"
+        elif lspci | grep VGA | egrep -iq "intel|amd"; then
+            echo "ⓘ Mesa >= 24 detected; if the game crashes try setting the game Launch Options in the Steam properties to:"
+            echo "    MESA_LOADER_DRIVER_OVERRIDE=zink %command%"
         fi
     fi
 
     # Check to see if the system has more than 8 cores
     if [ "$(nproc --all)" -gt 8 ]; then
-        echo "WARNING: System has more than 8 cores. See README for details on how to fix potential crashes."
+        echo "WARNING: System has more than 8 cores. See docs/linux-fixes.md for details on how to fix potential crashes."
     fi
 }
 

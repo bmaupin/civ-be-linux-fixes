@@ -1,10 +1,12 @@
-## Individual bugs and fixes
+# Fixes for the native Linux version of Beyond Earth
 
 ⓘ Most of these fixes are included in the [all-in-one patch script](../README.md#all-in-one-patch-script)
 
-### Game crashes without mods
+## Game crashes without mods
 
 The game can crash just before a match starts, or even 20 turns in. This can be caused by a number of different things.
+
+1. If you're using Intel Iris graphics and the game is crashing, see the [readme](../README.md)
 
 1. First, run this command and then try again:
 
@@ -34,9 +36,7 @@ The game can crash just before a match starts, or even 20 turns in. This can be 
 
    Source: [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=68#c830448456536458481)
 
-1. If you're using Intel graphics and the game is still crashing, see [iris-workaround.md](iris-workaround.md)
-
-### Game crashes when using mods
+## Game crashes when using mods
 
 The Linux version of Beyond Earth will crash if any mods are used. To fix this:
 
@@ -49,13 +49,13 @@ The Linux version of Beyond Earth will crash if any mods are used. To fix this:
 
 See [here](mod-crash-patch-details.md) for more information.
 
-### The game crashes loading a saved game with mods and different DLC
+## The game crashes loading a saved game with mods and different DLC
 
 If this happens, simply load/unload the necessary DLC before loading the saved game.
 
 For example, if you have Rising Tide enabled and you try to load a saved game that was created with a mod and with Rising Tide disabled, the game will crash unless you first unload the Rising Tide DLC before loading the saved game.
 
-### Terrain appears above cities and units, no water or hills are visible
+## Terrain appears above cities and units, no water or hills are visible
 
 Run this in a terminal:
 
@@ -68,7 +68,7 @@ If it continues happening, it may be due to a mod. See [https://steamcommunity.c
 
 See [here](more-details.md#terrain-appears-above-cities-and-units-no-water-or-hills-are-visible) for more information.
 
-### Terrain is black
+## Terrain is black
 
 TODO: What is the fix for this? Possible options:
 
@@ -77,7 +77,7 @@ TODO: What is the fix for this? Possible options:
 - [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135507780430381518](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135507780430381518)
 - [https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135508662492314124](https://steamcommunity.com/app/65980/discussions/0/626329820749233064/?ctp=58#c135508662492314124)
 
-### Sound issues
+## Sound issues
 
 This might fix sound issues, such as the game music stopping after a certain time:
 

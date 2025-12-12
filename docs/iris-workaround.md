@@ -1,5 +1,7 @@
 # Intel Iris crash workaround
 
+⚠️ This is no longer recommended as it still has issues. A better workaround is to use the Mesa `zink` driver. See the [readme](../README.md) for more information.
+
 ⓘ This workaround is already included in the all-in-one patch script in the [readme](../README.md)
 
 If you're using Intel graphics and the game is crashing:

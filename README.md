@@ -65,4 +65,22 @@ To uninstall the all-in-one patch script or any other modifications:
 - If you're using Proton and run into issues, try a newer version of Proton or [try the native Linux version](#choose-the-native-linux-version-or-proton)
   - The Proton version seems to crash when uninstalling mods while the game is running, particularly during mod development
 
-See [here](docs/troubleshooting.md) for more troubleshooting tips
+#### Crash when using Mesa >= 24 and Intel Iris graphics
+
+ⓘ The native Linux version will crash when using Mesa 24 or later and Intel Iris graphics. It's possible this may affect other Intel or AMD graphics cards.
+
+To fix this, switch to the Proton version or use this workaround:
+
+1.  Open Steam and go to _Library_
+
+1.  Find _Sid Meier's Civilization: Beyond Earth_ and right-click on it > _Properties_
+
+1.  Under _Launch Options_, add this:
+
+    ```
+    MESA_LOADER_DRIVER_OVERRIDE=zink %command%
+    ```
+
+#### Other issues
+
+See [here](docs/troubleshooting.md) for more general troubleshooting tips or [here](docs/linux-fixes.md) for troubleshooting issues with the native Linux version

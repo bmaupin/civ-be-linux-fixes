@@ -1,7 +1,5 @@
 # Troubleshooting
 
-ⓘ This page has more information for troubleshooting issues not related to a specific bug. See the [readme](../README.md) for specific bugs and fixes.
-
 ## Mods aren't loaded when a save game is loaded
 
 When loading a save game that was created using a mod, the mod may not be loaded automatically. This seems to be intended behaviour when a mod does not indicate in its configuration that it affects save games. If you wish to load a particular mod with a saved game, first load the mod through the _Mods_ menu and then load the saved game.
@@ -39,8 +37,6 @@ This means that:
 #### To troubleshoot
 
 1. First, make sure the mod patch in the [readme](../README.md) is installed
-
-1. Check the [readme](../README.md) for any other fixes that may apply to you
 
 1. The mod may require specific DLC or no DLC to work. Go to the _DLC_ menu in the game to load or unload DLC.
 

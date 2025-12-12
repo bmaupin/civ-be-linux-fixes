@@ -7,137 +7,192 @@ if [ -n "${1}" ]; then
     game_directory="$1"
 fi
 
-# Validate game directory
-if [[ ! -f "${game_directory}/CivBE" ]]; then
+# Detect whether we're using native or Proton
+if [[ -f "${game_directory}/CivBE" ]]; then
+    VERSION=linux
+    echo "Detected native Linux version of Beyond Earth"
+fi
+if [[ -f "${game_directory}/CivilizationBE_DX11.exe" ]]; then
+    VERSION=windows
+    echo "Detected Proton version of Beyond Earth"
+fi
+if [[ -z "${VERSION}" ]]; then
     echo "Error: Beyond Earth installation directory not found. Please provide the path to Beyond Earth, e.g."
     echo "    $0 \"/home/${USER}/.steam/steam/steamapps/common/Sid Meier's Civilization Beyond Earth\""
     exit 1
 fi
 
-echo "Copying libtbb.so.2 (fixes a crash after game starts)"
-cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 "${game_directory}"
+apply_linux_fixes() {
+    echo "Copying libtbb.so.2 (fixes a crash after game starts)"
+    cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libtbb.so.2 "${game_directory}"
 
-echo "Copying libopenal.so.1 (prevents issues with audio)"
-cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 "${game_directory}"
+    echo "Copying libopenal.so.1 (prevents issues with audio)"
+    cp ~/.local/share/Steam/ubuntu12_32/steam-runtime/usr/lib/i386-linux-gnu/libopenal.so.1 "${game_directory}"
 
-echo "Fixing terrain bug"
-sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/ui/ingame/worldview/diplocorner.lua"
-sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/dlc/expansion1/ui/ingame/worldview/diplocorner.lua"
+    echo "Fixing terrain bug"
+    sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/ui/ingame/worldview/diplocorner.lua"
+    sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/steamassets/assets/dlc/expansion1/ui/ingame/worldview/diplocorner.lua"
 
-echo "Applying mod crash patch"
-patch=$(cat << 'EOF'
-00a17f00: 8b # mov    0x844(%esp),%eax ; Put the address of list of needed DLC in $eax
-00a17f01: 84
-00a17f02: 24
-00a17f03: 44
-00a17f04: 08
-00a17f05: 00
-00a17f06: 00
-00a17f07: 89 # mov    %eax,0x4(%esp)   ; Put $eax in $esp+0x4 (second parameter)
-00a17f08: 44
-00a17f09: 24
-00a17f0a: 04
-00a17f0b: 8b # mov    0x70(%esp),%eax  ; Put the address of list of activated DLC in $eax
-00a17f0c: 44
-00a17f0d: 24
-00a17f0e: 70
-00a17f0f: 89 # mov    %eax,(%esp)      ; Put $eax in $esp (first parameter)
-00a17f10: 04
-00a17f11: 24
-00a17f12: e8 # call   0x8b896b6        ; Check if activated DLC != needed DLC
-00a17f13: 9f
-00a17f14: 97
-00a17f15: 12
-00a17f16: 00
-00a17f17: 84 # test   %al,%al          ; Test the result of the function call
-00a17f18: c0
-00a17f19: 74 # je     0x8a5ff32        ; If zero (i.e. equal), jump past call to LoadCvGameCoreDLL
-00a17f1a: 17
-00a17f1b: 90 # nop                     ; Clear out remaining instructions up to LoadCvGameCoreDLL
-00a17f1c: 90
-00a17f1d: 90
-00a17f1e: 90
-00a17f1f: 90
-00a17f20: 90
-00a17f30: 90 # nop                     ; Clear out instructions after LoadCvGameCoreDLL
-00a17f31: 90
-00a17f32: 90
-00a17f33: 90
-00a17f34: 90
-00a17f35: 90
-00a17f36: 90
-00a17f37: 90
+    echo "Applying mod crash patch"
+    patch=$(cat << 'EOF'
+    00a17f00: 8b # mov    0x844(%esp),%eax ; Put the address of list of needed DLC in $eax
+    00a17f01: 84
+    00a17f02: 24
+    00a17f03: 44
+    00a17f04: 08
+    00a17f05: 00
+    00a17f06: 00
+    00a17f07: 89 # mov    %eax,0x4(%esp)   ; Put $eax in $esp+0x4 (second parameter)
+    00a17f08: 44
+    00a17f09: 24
+    00a17f0a: 04
+    00a17f0b: 8b # mov    0x70(%esp),%eax  ; Put the address of list of activated DLC in $eax
+    00a17f0c: 44
+    00a17f0d: 24
+    00a17f0e: 70
+    00a17f0f: 89 # mov    %eax,(%esp)      ; Put $eax in $esp (first parameter)
+    00a17f10: 04
+    00a17f11: 24
+    00a17f12: e8 # call   0x8b896b6        ; Check if activated DLC != needed DLC
+    00a17f13: 9f
+    00a17f14: 97
+    00a17f15: 12
+    00a17f16: 00
+    00a17f17: 84 # test   %al,%al          ; Test the result of the function call
+    00a17f18: c0
+    00a17f19: 74 # je     0x8a5ff32        ; If zero (i.e. equal), jump past call to LoadCvGameCoreDLL
+    00a17f1a: 17
+    00a17f1b: 90 # nop                     ; Clear out remaining instructions up to LoadCvGameCoreDLL
+    00a17f1c: 90
+    00a17f1d: 90
+    00a17f1e: 90
+    00a17f1f: 90
+    00a17f20: 90
+    00a17f30: 90 # nop                     ; Clear out instructions after LoadCvGameCoreDLL
+    00a17f31: 90
+    00a17f32: 90
+    00a17f33: 90
+    00a17f34: 90
+    00a17f35: 90
+    00a17f36: 90
+    00a17f37: 90
 EOF
-)
-checksum=$(md5sum "${game_directory}/CivBE" | awk '{print $1}')
-# Unmodified
-if [ "$checksum" = "316a3d1b2c29fbe6b59a7cc04c240808" ] ||
-    # Cheevo patch has been applied
-    [ "$checksum" = "6e29371fd4e8f573e7f29426e314dd7f" ]; then
-    xxd -c1 -r <(echo "$patch") "${game_directory}/CivBE"
-fi
-
-echo "Deleting intro logo videos"
-rm -f "${game_directory}/steamassets/%aspyr.bk2"
-rm -f "${game_directory}/steamassets/aspyr.bk2"
-rm -f "${game_directory}/steamassets/civbe_logos.bk2"
-
-echo "Enabling achievements with mods"
-sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivBE"
-
-# https://forums.civfanatics.com/threads/spoiler-all-starships-unlockables-for-beyond-earth.544763/
-# These all require linking with 2K games account, which is apparently no longer possible, hence the patch
-echo "Unlocking Starships unlockables"
-sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecargo.xml"
-sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecolonists.xml"
-sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbespacecraft.xml"
-sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/inland_sea.lua"
-sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/tiny_islands.lua"
-sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/inland_sea.lua"
-sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/tiny_islands.lua"
-sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/maps/ice_age.lua"
-sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/ice_age.lua"
-
-# https://www.pcgamingwiki.com/wiki/Sid_Meier%27s_Civilization:_Beyond_Earth#Skip_legal_screen
-echo "Skip legal screen"
-sed -i 's/        UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/        -- UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/' "${game_directory}/steamassets/assets/ui/frontend/frontend.lua"
-
-echo "Skip mods EULA dialogue"
-sed -i 's/^g_HasAcceptedEULA = false;/g_HasAcceptedEULA = true;/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i '/--if not isHide and g_HasAcceptedEULA then/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i '/--\s*NavigateForward();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i '/--if(not isHide and g_QueueEulaToHide) then/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i '/--\s*NavigateBack();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
-
-# Check to see if system is using Intel Iris graphics
-if lspci | grep VGA | grep -q Iris; then
-    # Check to see if system is using Mesa 24 or newer
-    if [[ $(glxinfo | grep "OpenGL version" | rev | awk '{print $1}' | rev | cut -d . -f 1) -ge 24 ]]; then
-        echo "Applying Mesa Iris crash workaround"
-        curl -L -s https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz | tar -xJ -C "${game_directory}"
-        offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" "${game_directory}/libGL.so.1" | cut -d : -f 1)
-        echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc status=none
-
-        # See if libLLVM-17.so.1 is installed in the library path
-        libllvm17_path="$(ldconfig -p | grep libLLVM-17.so.1 | awk '{print $4}')"
-        # If it is not installed
-        if [ -z "${libllvm17_path}" ]; then
-            # If this is Ubuntu, install it
-            if grep -q "DISTRIB_ID=Ubuntu" /etc/*release; then
-                echo "    Installing 32-bit libLLVM-17.so.1"
-                sudo apt-get install -y libllvm17t64:i386 > /dev/null
-            else
-                echo "    👉 NOTE: 32-bit libLLVM-17.so.1 not found; you may need to install it"
-            fi
-        fi
-
-        echo "    👉 NOTE: In order for this to work, you will need to set the game's Compatibility to \"Legacy runtime 1.0\""
+    )
+    checksum=$(md5sum "${game_directory}/CivBE" | awk '{print $1}')
+    # Unmodified
+    if [ "$checksum" = "316a3d1b2c29fbe6b59a7cc04c240808" ] ||
+        # Cheevo patch has been applied
+        [ "$checksum" = "6e29371fd4e8f573e7f29426e314dd7f" ]; then
+        xxd -c1 -r <(echo "$patch") "${game_directory}/CivBE"
     fi
-fi
 
-# Check to see if the system has more than 8 cores
-if [ "$(nproc --all)" -gt 8 ]; then
-    echo "WARNING: System has more than 8 cores. See README for details on how to fix potential crashes."
+    echo "Deleting intro logo videos"
+    rm -f "${game_directory}/steamassets/%aspyr.bk2"
+    rm -f "${game_directory}/steamassets/aspyr.bk2"
+    rm -f "${game_directory}/steamassets/civbe_logos.bk2"
+
+    echo "Enabling achievements with mods"
+    sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivBE"
+
+    # https://forums.civfanatics.com/threads/spoiler-all-starships-unlockables-for-beyond-earth.544763/
+    # These all require linking with 2K games account, which is apparently no longer possible, hence the patch
+    echo "Unlocking Starships unlockables"
+    sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecargo.xml"
+    sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbecolonists.xml"
+    sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/steamassets/assets/gameplay/xml/civilizations/civbespacecraft.xml"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/inland_sea.lua"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/maps/tiny_islands.lua"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/inland_sea.lua"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/tiny_islands.lua"
+    sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/maps/ice_age.lua"
+    sed -i 's/RequiresMy2K = 1,//' "${game_directory}/steamassets/assets/dlc/expansion1/maps/ice_age.lua"
+
+    # https://www.pcgamingwiki.com/wiki/Sid_Meier%27s_Civilization:_Beyond_Earth#Skip_legal_screen
+    echo "Skip legal screen"
+    sed -i 's/        UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/        -- UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/' "${game_directory}/steamassets/assets/ui/frontend/frontend.lua"
+
+    echo "Skip mods EULA dialogue"
+    sed -i 's/^g_HasAcceptedEULA = false;/g_HasAcceptedEULA = true;/' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+    sed -i '/--if not isHide and g_HasAcceptedEULA then/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+    sed -i '/--\s*NavigateForward();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+    sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+    sed -i '/--if(not isHide and g_QueueEulaToHide) then/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+    sed -i '/--\s*NavigateBack();/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+    sed -i '/--end/s/--//' "${game_directory}/steamassets/assets/ui/frontend/modding/eula.lua"
+
+    # Check to see if system is using Intel Iris graphics
+    if lspci | grep VGA | grep -q Iris; then
+        # Check to see if system is using Mesa 24 or newer
+        if [[ $(glxinfo | grep "OpenGL version" | rev | awk '{print $1}' | rev | cut -d . -f 1) -ge 24 ]]; then
+            echo "Applying Mesa Iris crash workaround"
+            curl -L -s https://github.com/bmaupin/civ-be-linux-fixes/releases/download/v1.0.0/mesa-iris-workaround.tar.xz | tar -xJ -C "${game_directory}"
+            offset=$(grep -oba "/AReallyLongDirectoryNameToReplace" "${game_directory}/libGL.so.1" | cut -d : -f 1)
+            echo -ne "${game_directory}\0" | dd of="${game_directory}/libGL.so.1" bs=1 seek=${offset} conv=notrunc status=none
+
+            # See if libLLVM-17.so.1 is installed in the library path
+            libllvm17_path="$(ldconfig -p | grep libLLVM-17.so.1 | awk '{print $4}')"
+            # If it is not installed
+            if [ -z "${libllvm17_path}" ]; then
+                # If this is Ubuntu, install it
+                if grep -q "DISTRIB_ID=Ubuntu" /etc/*release; then
+                    echo "    Installing 32-bit libLLVM-17.so.1"
+                    sudo apt-get install -y libllvm17t64:i386 > /dev/null
+                else
+                    echo "    👉 NOTE: 32-bit libLLVM-17.so.1 not found; you may need to install it"
+                fi
+            fi
+
+            echo "    👉 NOTE: In order for this to work, you will need to set the game's Compatibility to \"Legacy runtime 1.0\""
+        fi
+    fi
+
+    # Check to see if the system has more than 8 cores
+    if [ "$(nproc --all)" -gt 8 ]; then
+        echo "WARNING: System has more than 8 cores. See README for details on how to fix potential crashes."
+    fi
+}
+
+apply_windows_fixes() {
+    echo "Fixing terrain bug"
+    sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/assets/UI/InGame/WorldView/DiploCorner.lua"
+    sed -i 's/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI")) then/if(Game.IsOption("GAMEOPTION_NO_CULTURE_OVERVIEW_UI") and Controls.CultureOverviewButton) then/' "${game_directory}/assets/DLC/Expansion1/UI/InGame/WorldView/DiploCorner.lua"
+
+    echo "Deleting intro logo videos"
+    rm -f "${game_directory}/CivBE_Logos.bk2"
+
+    echo "Enabling achievements with mods"
+    sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivilizationBE_DX11.exe"
+    sed -i 's/SELECT ModID from Mods where Activated = 1/SELECT ModID from Mods where Activated = 2/' "${game_directory}/CivilizationBE_Mantle.exe"
+
+    # https://forums.civfanatics.com/threads/spoiler-all-starships-unlockables-for-beyond-earth.544763/
+    # These all require linking with 2K games account, which is apparently no longer possible, hence the patch
+    echo "Unlocking Starships unlockables"
+    sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/assets/Gameplay/XML/Civilizations/CivBECargo.xml"
+    sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/assets/Gameplay/XML/Civilizations/CivBEColonists.xml"
+    sed -i 's/FiraxisLiveUnlockKey=".*"//' "${game_directory}/assets/Gameplay/XML/Civilizations/CivBESpacecraft.xml"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/assets/Maps/Inland_Sea.lua"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/assets/Maps/Tiny_Islands.lua"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/assets/Maps/Inland_Sea.lua"
+    sed -i 's/FiraxisLiveKey = ".*",//' "${game_directory}/assets/DLC/Expansion1/Maps/Tiny_Islands.lua"
+    sed -i 's/RequiresMy2K = 1,//' "${game_directory}/assets/Maps/Ice_Age.lua"
+    sed -i 's/RequiresMy2K = 1,//' "${game_directory}/assets/DLC/Expansion1/Maps/Ice_Age.lua"
+
+    # https://www.pcgamingwiki.com/wiki/Sid_Meier%27s_Civilization:_Beyond_Earth#Skip_legal_screen
+    echo "Skip legal screen"
+    sed -i 's/        UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/        -- UIManager:QueuePopup( Controls.LegalScreen, PopupPriority.LegalScreen );/' "${game_directory}/assets/UI/FrontEnd/FrontEnd.lua"
+
+    echo "Skip mods EULA dialogue"
+    sed -i 's/^g_HasAcceptedEULA = false;/g_HasAcceptedEULA = true;/' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+    sed -i '/--if not isHide and g_HasAcceptedEULA then/s/--//' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+    sed -i '/--\s*NavigateForward();/s/--//' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+    sed -i '/--end/s/--//' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+    sed -i '/--if(not isHide and g_QueueEulaToHide) then/s/--//' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+    sed -i '/--\s*NavigateBack();/s/--//' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+    sed -i '/--end/s/--//' "${game_directory}/assets/UI/FrontEnd/Modding/EULA.lua"
+}
+
+if [[ "${VERSION}" == "linux" ]]; then
+    apply_linux_fixes
+elif [[ "${VERSION}" == "windows" ]]; then
+    apply_windows_fixes
 fi
